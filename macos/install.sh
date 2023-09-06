@@ -18,3 +18,6 @@ brew install --cask miniconda
 brew install tmux
 brew install jq
 brew install nmap
+
+
+git config --global push.autoSetupRemote true
