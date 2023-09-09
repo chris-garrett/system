@@ -1,5 +1,7 @@
 #!/bin/bash
 
+softwareupdate --install-rosetta
+
 brew update
 
 brew install git-lfs
@@ -18,6 +20,12 @@ brew install --cask miniconda
 brew install tmux
 brew install jq
 brew install nmap
+brew install iterm2
+brew install neovim
+
+brew install watch
+brew install stats
+brew install watchexec
 
 
 git config --global push.autoSetupRemote true
