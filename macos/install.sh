@@ -29,3 +29,9 @@ brew install watchexec
 
 
 git config --global push.autoSetupRemote true
+
+# install multiple .net versions
+ curl -LO https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
+ chmod +x ./dotnet-install.sh
+ ./dotnet-install.sh -i ~/opt/dotnet/6.0.413 -v 6.0.413
+ ./dotnet-install.sh -i ~/opt/dotnet/7.0.400 -v 7.0.400
