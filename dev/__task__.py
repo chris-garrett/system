@@ -17,12 +17,10 @@ def _git_config(ctx: TaskContext):
 
 def _dotnet_installer(ctx: TaskContext, version: str):
     if ctx.system.platform == "linux":
-        print("dist 1")
         dotnet = os.path.expanduser("~/.dotnet/dotnet")
         installer_file = "/tmp/dotnet-install.sh"
 
         if not os.path.exists(installer_file):
-            print("dist 2")
             ctx.exec(f"curl -L -o {installer_file} https://dot.net/v1/dotnet-install.sh")
 
         ret = ctx.exec(f"{dotnet} --list-sdks", quiet=True)
@@ -32,10 +30,12 @@ def _dotnet_installer(ctx: TaskContext, version: str):
         found = len([x for x in ret.stdout.splitlines() if x.startswith(version)])
         if not found:
             ctx.exec(f"/bin/bash {installer_file} -c {version}")
-
-
-def _noop(ctx: TaskContext):
-    ctx.log.info("installing all .net versions")
+        else:
+            ctx.log.info(f"dotnet {version} already installed")
+    else:
+        raise NotImplementedError(
+            f"dotnet {version} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def configure(builder: TaskBuilder):
@@ -48,7 +48,7 @@ def configure(builder: TaskBuilder):
     builder.add_task(
         module_name,
         f"{module_name}:dotnet:all",
-        _noop,
+        lambda ctx: None,
         deps=[f"{module_name}:dotnet:6", f"{module_name}:dotnet:7", f"{module_name}:dotnet:8"],
     )
     builder.add_task(
