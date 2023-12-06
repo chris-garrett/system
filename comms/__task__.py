@@ -5,7 +5,6 @@ module_name = "comms"
 
 
 def configure(builder: TaskBuilder):
-    builder.add_task(module_name, f"{module_name}:htop", lambda ctx: snap_install(ctx, "htop"))
-    builder.add_task(
-        module_name, f"{module_name}:flameshot", lambda ctx: apt_install(ctx, "flameshot", "/usr/bin/flameshot")
-    )
+    builder.add_task(module_name, f"{module_name}:slack", lambda ctx: snap_install(ctx, "slack"))
+    builder.add_task(module_name, f"{module_name}:discord", lambda ctx: snap_install(ctx, "discord"))
+    builder.add_task(module_name, f"{module_name}:mattermost", lambda ctx: snap_install(ctx, "mattermost-desktop"))
