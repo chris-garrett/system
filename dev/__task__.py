@@ -38,6 +38,25 @@ def _dotnet_installer(ctx: TaskContext, version: str):
         )
 
 
+def _toolbox(ctx: TaskContext):
+    if ctx.system.distro == "debian":
+        toolbox = os.path.expanduser("~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox")
+        if not os.path.exists(toolbox):
+            ctx.exec("sudo apt-get install -y fuse libfuse2")
+            ctx.exec("mkdir -p /tmp/jtoolbox")
+            ctx.exec(
+                "curl -o /tmp/jtoolbox.tar.gz -L 'https://data.services.jetbrains.com/products/download?platform=linux&code=TBA'"
+            )
+            ctx.exec("tar xvf /tmp/jtoolbox.tar.gz -C /tmp/jtoolbox")
+            ret = ctx.exec("find /tmp/jtoolbox -name jetbrains-toolbox", quiet=True)
+            if ret.returncode != 0:
+                raise Exception(f"Failed to find jetbrains toolbox: {ret.stderr}")
+
+            ctx.exec(ret.stdout.strip())
+    else:
+        raise NotImplementedError(f"toolbox not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+
+
 def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:meld", lambda ctx: apt_install(ctx, "meld", "/usr/bin/meld"))
     builder.add_task(module_name, f"{module_name}:postman", lambda ctx: snap_install(ctx, "postman"))
@@ -60,3 +79,4 @@ def configure(builder: TaskBuilder):
     builder.add_task(
         module_name, f"{module_name}:dotnet:8", lambda ctx: _dotnet_installer(ctx, "8.0"), deps=["utils:curl"]
     )
+    builder.add_task(module_name, f"{module_name}:toolbox", _toolbox)
