@@ -1,24 +1,18 @@
+import os
 from __task__ import TaskContext, TaskBuilder
 
 
-def _update(ctx: TaskContext):
-    ctx.log.info("Updating OS")
+def _setup(ctx: TaskContext):
     if ctx.system.distro == "debian":
-        ctx.exec("sudo apt update")
-    else:
-        raise NotImplementedError(f"Not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
-
-
-def _upgrade(ctx: TaskContext):
-    ctx.log.info("Grading OS")
-    if ctx.system.distro == "debian":
-        ctx.exec("sudo apt upgrade -y")
-        ctx.exec("sudo snap refresh")
+        if not os.path.exists("/snap/bin/gitkraken"):
+            ctx.log.info("installing")
+            ctx.exec("sudo snap install --classic gitkraken")
+        else:
+            ctx.log.info("already installed")
     else:
         raise NotImplementedError(f"Not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def configure(builder: TaskBuilder):
-    module_name = "os"
-    builder.add_task(module_name, "os:update", _update)
-    builder.add_task(module_name, "os:upgrade", _upgrade, deps=["os:update"])
+    module_name = "gitkraken"
+    builder.add_task(module_name, "gitkraken", _setup)
