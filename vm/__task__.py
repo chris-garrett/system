@@ -71,8 +71,8 @@ def _vm_stop(ctx: TaskContext, name: str):
 
 
 def configure(builder: TaskBuilder):
-    builder.add_task(module_name, module_name, _setup)
+    builder.add_task(module_name, f"{module_name}:install", _setup)
     builder.add_task(module_name, f"{module_name}:guest", _guest)
-    builder.add_task(module_name, "vm:ce:create", lambda ctx: _vm_create(ctx, "ce"))
-    builder.add_task(module_name, "vm:ce:up", lambda ctx: _vm_start(ctx, "ce"))
-    builder.add_task(module_name, "vm:ce:down", lambda ctx: _vm_stop(ctx, "ce"))
+    builder.add_task(module_name, f"{module_name}:ce:create", lambda ctx: _vm_create(ctx, "ce"))
+    builder.add_task(module_name, f"{module_name}:ce:up", lambda ctx: _vm_start(ctx, "ce"))
+    builder.add_task(module_name, f"{module_name}:ce:down", lambda ctx: _vm_stop(ctx, "ce"))
