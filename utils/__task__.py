@@ -1,6 +1,6 @@
 import os
 from __task__ import TaskBuilder, TaskContext
-from __system__ import snap_install, apt_install
+from __system__ import snap_install, apt_install, deb_install, get_github_download_url
 
 
 def _dropbox(ctx: TaskContext):
@@ -24,7 +24,16 @@ def configure(builder: TaskBuilder):
         module_name, f"{module_name}:flameshot", lambda ctx: apt_install(ctx, "flameshot", "/usr/bin/flameshot")
     )
     builder.add_task(module_name, f"{module_name}:curl", lambda ctx: apt_install(ctx, "curl", "/usr/bin/curl"))
-    builder.add_task(module_name, f"{module_name}:liquidctl", lambda ctx: apt_install(ctx, "liquidctl", "/usr/bin/liquidctl"))
+    builder.add_task(
+        module_name, f"{module_name}:liquidctl", lambda ctx: apt_install(ctx, "liquidctl", "/usr/bin/liquidctl")
+    )
+    builder.add_task(
+        module_name,
+        f"{module_name}:bottom",
+        lambda ctx: deb_install(
+            ctx, "bottom", "/usr/bin/btm", get_github_download_url("ClementTsang", "bottom", r"amd64.deb$")
+        ),
+    )
     builder.add_task(
         module_name, f"{module_name}:filezilla", lambda ctx: apt_install(ctx, "filezilla", "/usr/bin/filezilla")
     )
