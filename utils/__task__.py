@@ -24,6 +24,7 @@ def configure(builder: TaskBuilder):
         module_name, f"{module_name}:flameshot", lambda ctx: apt_install(ctx, "flameshot", "/usr/bin/flameshot")
     )
     builder.add_task(module_name, f"{module_name}:curl", lambda ctx: apt_install(ctx, "curl", "/usr/bin/curl"))
+    builder.add_task(module_name, f"{module_name}:liquidctl", lambda ctx: apt_install(ctx, "liquidctl", "/usr/bin/liquidctl"))
     builder.add_task(
         module_name, f"{module_name}:filezilla", lambda ctx: apt_install(ctx, "filezilla", "/usr/bin/filezilla")
     )
