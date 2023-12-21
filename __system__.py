@@ -1,6 +1,6 @@
 import os
 import re
-import requests
+import json
 from __task__ import TaskContext
 
 
@@ -82,7 +82,7 @@ def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
         raise NotImplementedError(f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
-def get_github_download_url(org: str, repo: str, regex: str):
+def get_github_download_url(ctx: TaskContext, org: str, repo: str, regex: str):
     """
     Function to get the download URL of the latest release of a GitHub repository.
 
@@ -97,11 +97,13 @@ def get_github_download_url(org: str, repo: str, regex: str):
     Examples:
         >>> get_github_download_url("VSCodium", "vscodium", r"amd64.deb$")
     """
-    ret = requests.get(
-        f"https://api.github.com/repos/{org}/{repo}/releases/latest",
-        headers={"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"},
+
+    url = f"https://api.github.com/repos/{org}/{repo}/releases/latest"
+    ret = ctx.exec(
+        f"curl --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' -L -C - '{url}'",
+        quiet=True,
     )
-    release_json = ret.json()
+    release_json = json.loads(ret.stdout)
 
     for asset in release_json["assets"]:
         if re.search(regex, asset["name"]):

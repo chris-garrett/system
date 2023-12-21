@@ -31,10 +31,20 @@ def configure(builder: TaskBuilder):
         module_name,
         f"{module_name}:bottom",
         lambda ctx: deb_install(
-            ctx, "bottom", "/usr/bin/btm", get_github_download_url("ClementTsang", "bottom", r"amd64.deb$")
+            ctx, "bottom", "/usr/bin/btm", get_github_download_url(ctx, "ClementTsang", "bottom", r"amd64.deb$")
         ),
     )
     builder.add_task(
         module_name, f"{module_name}:filezilla", lambda ctx: apt_install(ctx, "filezilla", "/usr/bin/filezilla")
     )
     builder.add_task(module_name, f"{module_name}:dropbox", _dropbox, deps=["utils:curl"])
+    builder.add_task(
+        module_name,
+        f"{module_name}:watchexec",
+        lambda ctx: deb_install(
+            ctx,
+            "watchexec",
+            "/usr/bin/watchexec",
+            get_github_download_url(ctx, "watchexec", "watchexec", r"x86_64-unknown-linux-gnu.deb$"),
+        ),
+    )
