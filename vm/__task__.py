@@ -1,7 +1,6 @@
 import os
 from __task__ import TaskBuilder, TaskContext
-
-from __system__ import snap_install, apt_install
+from __system__ import apt_install
 
 
 module_name = "vm"
@@ -11,7 +10,7 @@ def _setup(ctx: TaskContext):
     if ctx.system.distro == "debian":
         if not os.path.exists("/usr/sbin/kvm-ok"):
             ctx.exec(
-                "sudo apt install -y bridge-utils cpu-checker libvirt-clients libvirt-daemon qemu qemu-kvm virt-manager ovmf"  # noqa
+                "sudo apt install -y bridge-utils cpu-checker libvirt-clients libvirt-daemon qemu qemu-kvm virt-manager ovmf net-tools"  # noqa
             )
         else:
             ctx.log.info("already installed")
@@ -70,9 +69,17 @@ def _vm_stop(ctx: TaskContext, name: str):
         raise NotImplementedError(f"{module_name} not implemented")
 
 
+def _vm_setup_bridge(ctx: TaskContext):
+    if ctx.system.distro == "debian":
+        ctx.exec(f"sudo bash {ctx.project_dir}/netplan-public-bridge-setup.sh")
+    else:
+        raise NotImplementedError(f"{module_name} not implemented")
+
+
 def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:install", _setup)
     builder.add_task(module_name, f"{module_name}:guest", _guest)
+    builder.add_task(module_name, f"{module_name}:bridge", _vm_setup_bridge)
     builder.add_task(module_name, f"{module_name}:ce:create", lambda ctx: _vm_create(ctx, "ce"))
     builder.add_task(module_name, f"{module_name}:ce:up", lambda ctx: _vm_start(ctx, "ce"))
     builder.add_task(module_name, f"{module_name}:ce:down", lambda ctx: _vm_stop(ctx, "ce"))
