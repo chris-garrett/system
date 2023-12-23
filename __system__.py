@@ -82,6 +82,39 @@ def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
         raise NotImplementedError(f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
+def get_github_release(ctx: TaskContext, org: str, repo: str) -> dict:
+    """
+    Retrieve the latest release data from a GitHub repository.
+
+    This function fetches the latest release information of the specified GitHub repository
+    by making an HTTP GET request to the GitHub API. It returns the JSON response as a dictionary.
+
+    Args:
+        ctx (TaskContext): The context of the task, providing system details and logging.
+        org (str): The organization or user name that owns the repository.
+        repo (str): The repository name.
+
+    Returns:
+        dict: A dictionary containing the latest release information.
+
+    Examples:
+        >>> ctx = TaskContext(...)
+        >>> release_data = get_github_release(ctx, 'octocat', 'Hello-World')
+        >>> print(release_data['tag_name'])
+        'v1.0.0'
+
+    Note:
+        The GitHub API version and other headers are set in the curl command to ensure compatibility
+        and proper response format.
+    """
+    url = f"https://api.github.com/repos/{org}/{repo}/releases/latest"
+    ret = ctx.exec(
+        f"curl --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' -L -C - '{url}'",  # noqa
+        quiet=True,
+    )
+    return json.loads(ret.stdout)
+
+
 def get_github_download_url(ctx: TaskContext, org: str, repo: str, regex: str):
     """
     Function to get the download URL of the latest release of a GitHub repository.
@@ -100,7 +133,7 @@ def get_github_download_url(ctx: TaskContext, org: str, repo: str, regex: str):
 
     url = f"https://api.github.com/repos/{org}/{repo}/releases/latest"
     ret = ctx.exec(
-        f"curl --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' -L -C - '{url}'",
+        f"curl --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' -L -C - '{url}'",  # noqa
         quiet=True,
     )
     release_json = json.loads(ret.stdout)
@@ -110,3 +143,85 @@ def get_github_download_url(ctx: TaskContext, org: str, repo: str, regex: str):
             return asset["browser_download_url"]
 
     return ""
+
+
+def deb_install_github(ctx: TaskContext, app: str, file_test: str, org: str, repo: str, regex: str):
+    """
+    Install a Debian package directly from a GitHub repository's latest release.
+
+    This function uses the `deb_install` function to install a Debian package. It retrieves
+    the download URL for the package from the latest release of the specified GitHub repository
+    by matching the provided regex pattern. It then proceeds to install the package if it is
+    not already installed on the system.
+
+    Args:
+        ctx (TaskContext): The task context that provides system details and logging.
+        app (str): The name of the application to be installed.
+        file_test (str): The path to check if the application is already installed.
+        org (str): The GitHub organization or user that owns the repository.
+        repo (str): The name of the repository on GitHub.
+        regex (str): The regex pattern to match the name of the Debian package asset.
+
+    Raises:
+        NotImplementedError: If the system distro is not Debian.
+    """
+    # Retrieve the download URL for the Debian package from the GitHub repository's latest release
+    deb_url = get_github_download_url(ctx, org, repo, regex)
+    # Install the Debian package using the retrieved URL
+    deb_install(ctx, app, file_test, deb_url)
+
+
+def usr_binary_install(ctx: TaskContext, app: str, app_url: str):
+    """
+    Function to install a binary application.
+
+    This function downloads a binary file from a URL and moves it to the '/usr/local/bin' directory,
+    making it executable. It checks if the application is already installed before proceeding.
+
+    Args:
+        ctx (TaskContext): Context object that provides system details and logging.
+        app (str): The name of the binary application to be installed.
+        app_url (str): The URL from where to download the binary application.
+
+    Raises:
+        NotImplementedError: If the system platform is not Linux.
+    """
+    if ctx.system.platform == "linux":
+        # Check if the binary is already installed
+        if not os.path.exists(f"/usr/local/bin/{app}"):
+            # Download the binary to a temporary location
+            ctx.exec(f"curl -o /tmp/{app} -L -C - '{app_url}'")
+            # Make the binary executable
+            ctx.exec(f"chmod +x /tmp/{app}")
+            # Move the binary to the '/usr/local/bin' directory
+            ctx.exec(f"sudo mv /tmp/{app} /usr/local/bin/{app}")
+        else:
+            # Log the information that the application is already installed
+            ctx.log.info(f"{app} already installed")
+    else:
+        # Raise an error if the platform is not Linux
+        raise NotImplementedError(f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+
+
+def usr_binary_install_github(ctx: TaskContext, app: str, org: str, repo: str, regex: str):
+    """
+    Install a binary application directly from a GitHub repository's latest release.
+
+    This function retrieves the download URL for the binary from the latest release of the
+    specified GitHub repository by matching the provided regex pattern. It then proceeds to
+    install the binary if it is not already installed on the system.
+
+    Args:
+        ctx (TaskContext): The task context that provides system details and logging.
+        app (str): The name of the binary application to be installed.
+        org (str): The GitHub organization or user that owns the repository.
+        repo (str): The name of the repository on GitHub.
+        regex (str): The regex pattern to match the name of the binary asset.
+
+    Raises:
+        NotImplementedError: If the system platform is not Linux.
+    """
+    # Retrieve the download URL for the binary from the GitHub repository's latest release
+    app_url = get_github_download_url(ctx, org, repo, regex)
+    # Install the binary application using the retrieved URL
+    usr_binary_install(ctx, app, app_url)
