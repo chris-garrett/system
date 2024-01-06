@@ -22,6 +22,9 @@ def _guest(ctx: TaskContext):
     if ctx.system.distro == "debian":
         apt_install(ctx, "open-vm-tools-desktop", "/usr/bin/vmware-user")
         apt_install(ctx, "qemu-guest-agent", "/etc/init.d/qemu-guest-agent")
+        # tools for window snapping. map to win+left, win+right etc
+        apt_install(ctx, "xdotool", "/usr/bin/xdotool")
+        apt_install(ctx, "wmctrl", "/usr/bin/wmctrl")
     else:
         raise NotImplementedError(f"{module_name}:guest not implemented")
 
