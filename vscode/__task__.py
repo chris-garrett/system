@@ -22,7 +22,7 @@ def _dotnet(ctx: TaskContext):
 
 def _install_codium(ctx: TaskContext):
     # TODO: add alias code -> codium
-    if ctx.system.arch == "x86_64" and ctx.system.distro == "debian":
+    if ctx.system.arch == "x86_64" and "debian" in ctx.system.distro:
         deb_url = get_github_download_url(ctx, "VSCodium", "vscodium", r"amd64.deb$")
         deb_install(ctx, "codium", "/usr/bin/codium", deb_url)
     else:

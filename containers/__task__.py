@@ -11,7 +11,7 @@ module_name = "containers"
 
 
 def _setup_docker(ctx: TaskContext):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         if not os.path.exists("/snap/bin/docker"):
             ctx.exec("sudo addgroup --system docker")
             ctx.exec(f"sudo adduser {os.getlogin()} docker")
@@ -24,7 +24,7 @@ def _setup_docker(ctx: TaskContext):
 
 
 def _kubectl(ctx: TaskContext):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/local/bin/kubectl"):
             version = ctx.exec("curl -L -s https://dl.k8s.io/release/stable.txt", quiet=True).stdout
             usr_binary_install(ctx, "kubectl", f"https://dl.k8s.io/release/{version}/bin/linux/amd64/kubectl")
@@ -39,7 +39,7 @@ def _helm(ctx: TaskContext):
     """
     Helm doesnt use assets in GH releases for binaries. Links are buried in the description of the release.
     """
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/local/bin/helm"):
             release = get_github_release(ctx, "helm", "helm")
             matches = re.search(r"\[Linux amd64\]\((.*.gz)\)", release["body"])

@@ -39,7 +39,7 @@ def _dotnet_installer(ctx: TaskContext, version: str):
 
 
 def _toolbox(ctx: TaskContext):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         toolbox = os.path.expanduser("~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox")
         if not os.path.exists(toolbox):
             ctx.exec("sudo apt-get install -y fuse libfuse2")

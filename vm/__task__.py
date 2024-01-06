@@ -7,7 +7,7 @@ module_name = "vm"
 
 
 def _setup(ctx: TaskContext):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/sbin/kvm-ok"):
             ctx.exec(
                 "sudo apt install -y bridge-utils cpu-checker libvirt-clients libvirt-daemon qemu qemu-kvm virt-manager ovmf net-tools"  # noqa
@@ -19,7 +19,7 @@ def _setup(ctx: TaskContext):
 
 
 def _guest(ctx: TaskContext):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         apt_install(ctx, "open-vm-tools-desktop", "/usr/bin/vmware-user")
         apt_install(ctx, "qemu-guest-agent", "/etc/init.d/qemu-guest-agent")
         # tools for window snapping. map to win+left, win+right etc
@@ -59,21 +59,21 @@ def _vm_create(ctx: TaskContext, name: str):
 
 
 def _vm_start(ctx: TaskContext, name: str):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         ctx.exec(f"virsh start {name}")
     else:
         raise NotImplementedError(f"{module_name} not implemented")
 
 
 def _vm_stop(ctx: TaskContext, name: str):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         ctx.exec(f"virsh start {name}")
     else:
         raise NotImplementedError(f"{module_name} not implemented")
 
 
 def _vm_setup_bridge(ctx: TaskContext):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         ctx.exec(f"sudo bash {ctx.project_dir}/netplan-public-bridge-setup.sh")
     else:
         raise NotImplementedError(f"{module_name} not implemented")

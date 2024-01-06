@@ -5,7 +5,7 @@ from __system__ import deb_install, apt_install
 def _protontricks(ctx: TaskContext):
     if ctx.exec("pip --version").returncode:
         print(f"distro {ctx.system.distro}")
-        if ctx.system.distro == "debian":
+        if "debian" in ctx.system.distro:
             ctx.exec("sudo apt install -y python3-pip")
             ctx.exec("sudo snap install --edge yad")
             ctx.exec("pip install protontricks")

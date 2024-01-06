@@ -47,7 +47,7 @@ def apt_install(ctx: TaskContext, app: str, file_test: str):
         NotImplementedError: If the system distro is not debian.
     """
 
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         if not os.path.exists(file_test):
             ctx.log.info(f"installing {app}")
             ctx.exec(f"sudo apt install -y {app}")
@@ -71,7 +71,7 @@ def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
         NotImplementedError: If the system distro is not debian.
     """
 
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         if not os.path.exists(file_test):
             ctx.exec(f"curl -o /tmp/{app}.deb -L -C - '{deb_url}'")
             ctx.exec(f"sudo dpkg -i /tmp/{app}.deb")

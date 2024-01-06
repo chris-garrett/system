@@ -4,7 +4,7 @@ from __system__ import snap_install, apt_install, deb_install, get_github_downlo
 
 
 def _dropbox(ctx: TaskContext):
-    if ctx.system.distro == "debian":
+    if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/bin/dropbox-xl"):
             user_home = os.path.expanduser("~")
             ctx.exec(
