@@ -12,10 +12,27 @@ module_name = "containers"
 
 def _setup_docker(ctx: TaskContext):
     if "debian" in ctx.system.distro:
-        if not os.path.exists("/snap/bin/docker"):
-            ctx.exec("sudo addgroup --system docker")
-            ctx.exec(f"sudo adduser {os.getlogin()} docker")
-            ctx.exec("sudo snap install docker")
+        if not os.path.exists("/usr/local/bin/docker"):
+            ctx.exec("sudo apt update")
+            ctx.exec("sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release")
+            ctx.exec("sudo install -m 0755 -d /etc/apt/keyrings")
+
+            gpg = ctx.exec("curl -fsSL https://download.docker.com/linux/ubuntu/gpg", quiet=True).stdout
+            ctx.exec("sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg", input=gpg)
+
+            arch = ctx.exec("dpkg --print-architecture", quiet=True).stdout.strip()
+            lsb = ctx.exec("lsb_release -cs", quiet=True).stdout.strip()
+            source_entry = f"deb [arch={arch} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {lsb} stable"
+            with open("/tmp/docker.list", "w") as f:
+                f.write(source_entry)
+            ctx.exec("sudo mv /tmp/docker.list /etc/apt/sources.list.d/docker.list")
+
+            ctx.exec("sudo apt update")
+            ctx.exec(
+                "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
+            )
+            who = ctx.exec("whoami", quiet=True).stdout.strip()
+            ctx.exec(f"sudo usermod -aG docker {who}")
         else:
             ctx.log.info("docker already installed")
 
