@@ -98,7 +98,7 @@ class SystemContext(NamedTuple):
 
 
 def exec(
-    cmd: str, cwd: str = None, logger: Logger = None, venv_dir: str = None, quiet: bool = False
+    cmd: str, cwd: str = None, logger: Logger = None, venv_dir: str = None, quiet: bool = False, input: str = None
 ) -> CompletedProcess[str]:
     args = [arg.strip() for arg in shlex.split(cmd.strip())]
     if isinstance(logger, Logger) and not quiet:
@@ -115,6 +115,7 @@ def exec(
             cwd=cwd,
             env=_build_env(os.environ, venv_dir) if venv_dir else os.environ,
             capture_output=quiet,
+            input=input,
         )
     except Exception as ex:
         return CompletedProcess(args=args, returncode=1, stdout="", stderr=str(ex))
@@ -127,8 +128,10 @@ class TaskContext(ExecProtocol):
     log: Logger
     system: SystemContext
 
-    def exec(self, cmd: str, cwd: str = None, venv_dir: str = None, quiet: bool = False) -> CompletedProcess[str]:
-        return exec(cmd, cwd, self.log, venv_dir, quiet)
+    def exec(
+        self, cmd: str, cwd: str = None, venv_dir: str = None, quiet: bool = False, input: str = None
+    ) -> CompletedProcess[str]:
+        return exec(cmd, cwd, self.log, venv_dir, quiet, input)
 
 
 class TaskFileDefinition(NamedTuple):
