@@ -17,11 +17,11 @@ def _setup_docker(ctx: TaskContext):
             ctx.exec("sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release")
             ctx.exec("sudo install -m 0755 -d /etc/apt/keyrings")
 
-            gpg = ctx.exec("curl -fsSL https://download.docker.com/linux/ubuntu/gpg", quiet=True).stdout
+            gpg = ctx.exec("curl -fsSL https://download.docker.com/linux/ubuntu/gpg", capture=True).stdout
             ctx.exec("sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg", input=gpg)
 
-            arch = ctx.exec("dpkg --print-architecture", quiet=True).stdout.strip()
-            lsb = ctx.exec("lsb_release -cs", quiet=True).stdout.strip()
+            arch = ctx.exec("dpkg --print-architecture", capture=True).stdout.strip()
+            lsb = ctx.exec("lsb_release -cs", capture=True).stdout.strip()
             source_entry = f"deb [arch={arch} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {lsb} stable"
             with open("/tmp/docker.list", "w") as f:
                 f.write(source_entry)
@@ -31,7 +31,7 @@ def _setup_docker(ctx: TaskContext):
             ctx.exec(
                 "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
             )
-            who = ctx.exec("whoami", quiet=True).stdout.strip()
+            who = ctx.exec("whoami", capture=True).stdout.strip()
             ctx.exec(f"sudo usermod -aG docker {who}")
         else:
             ctx.log.info("docker already installed")
@@ -43,7 +43,7 @@ def _setup_docker(ctx: TaskContext):
 def _kubectl(ctx: TaskContext):
     if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/local/bin/kubectl"):
-            version = ctx.exec("curl -L -s https://dl.k8s.io/release/stable.txt", quiet=True).stdout
+            version = ctx.exec("curl -L -s https://dl.k8s.io/release/stable.txt", capture=True).stdout
             usr_binary_install(ctx, "kubectl", f"https://dl.k8s.io/release/{version}/bin/linux/amd64/kubectl")
         else:
             ctx.log.info("kubectl already installed")

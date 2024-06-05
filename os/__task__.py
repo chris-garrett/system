@@ -11,11 +11,12 @@ def _print_info(ctx: TaskContext):
 def _upgrade(ctx: TaskContext):
     ctx.exec("sudo apt upgrade -y")
     ctx.exec("sudo snap refresh")
+    ctx.exec("sudo systemctl daemon-reload")
 
 
 def _disk_free(ctx: TaskContext):
     def _print_disk_free(location):
-        ret = ctx.exec(f"sudo du -cha --max-depth=1 {location} ", quiet=True)
+        ret = ctx.exec(f"sudo du -cha --max-depth=1 {location} ", capture=True)
         for line in ret.stdout.splitlines():
             if "M" in line or "G" in line:
                 print(line)

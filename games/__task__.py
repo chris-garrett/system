@@ -1,5 +1,5 @@
-from __task__ import TaskContext, TaskBuilder
-from __system__ import deb_install, apt_install
+from __system__ import apt_install, deb_install
+from __task__ import TaskBuilder, TaskContext
 
 
 def _protontricks(ctx: TaskContext):
@@ -9,6 +9,13 @@ def _protontricks(ctx: TaskContext):
             ctx.exec("sudo apt install -y python3-pip")
             ctx.exec("sudo snap install --edge yad")
             ctx.exec("pip install protontricks")
+
+
+def _protonup(ctx: TaskContext):
+    pass
+    # pip3 install protonup
+    # protonup -d "~/.steam/root/compatibilitytools.d/"
+    # protonup -t GE-Proton9-4
 
 
 def configure(builder: TaskBuilder):

@@ -1,7 +1,50 @@
+import json
 import os
 import re
-import json
+import uuid
+
 from __task__ import TaskContext
+
+
+def _ensure_curl(ctx: TaskContext):
+    if not os.path.exists("/usr/bin/curl"):
+        ctx.exec("sudo apt install -y curl", capture=True)
+
+
+def get_shelld_dir(ctx: TaskContext):
+    return os.path.abspath(os.path.expanduser("~/.shell.d"))
+
+
+def get_tmp_dir(ctx: TaskContext):
+    return os.path.abspath(os.path.join(ctx.root_dir, "tmp"))
+
+
+def install_msi(ctx: TaskContext, file_path):
+    return ctx.exec(f"msiexec /i '{file_path}'")
+    # TODO: figure out how to do this unattended.
+    return ctx.exec(f"msiexec /i '{file_path}' /quiet /passive /qn /norestart")
+
+
+def download_to_tmp(ctx: TaskContext, url, name, force_redownload=False):
+    _ensure_curl(ctx)
+
+    tmp_dir = get_tmp_dir(ctx)
+
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir, exist_ok=True)
+
+    fname = name if name else uuid.uuid4()
+    fname_path = os.path.join(tmp_dir, fname)
+
+    # dont download if it already exists
+    if os.path.exists(fname_path) and not force_redownload:
+        ctx.log.info(f"{name} already downloaded")
+        return fname_path
+
+    ctx.log.info(f"downloading {name}")
+    ctx.exec(f"curl -o '{fname_path}' -L -C - '{url}'")
+
+    return fname_path
 
 
 def snap_install(ctx: TaskContext, app: str, classic=False, edge=False):
@@ -27,11 +70,12 @@ def snap_install(ctx: TaskContext, app: str, classic=False, edge=False):
     if ctx.system.platform == "linux":
         if not os.path.exists(f"/snap/bin/{app}"):
             ctx.log.info(f"installing {app}")
-            ctx.exec(f"sudo snap install {extra_repo}{app}")
+            ctx.exec(f"sudo snap install {extra_repo} {app}")
         else:
             ctx.log.info(f"{app} already installed")
     else:
-        raise NotImplementedError(f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def apt_install(ctx: TaskContext, app: str, file_test: str):
@@ -54,7 +98,9 @@ def apt_install(ctx: TaskContext, app: str, file_test: str):
         else:
             ctx.log.info(f"{app} already installed")
     else:
-        raise NotImplementedError(f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
@@ -70,6 +116,7 @@ def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
     Raises:
         NotImplementedError: If the system distro is not debian.
     """
+    _ensure_curl(ctx)
 
     if "debian" in ctx.system.distro:
         if not os.path.exists(file_test):
@@ -79,7 +126,9 @@ def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
         else:
             ctx.log.info(f"{app} already installed")
     else:
-        raise NotImplementedError(f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def get_github_release(ctx: TaskContext, org: str, repo: str) -> dict:
@@ -107,10 +156,12 @@ def get_github_release(ctx: TaskContext, org: str, repo: str) -> dict:
         The GitHub API version and other headers are set in the curl command to ensure compatibility
         and proper response format.
     """
+    _ensure_curl(ctx)
+
     url = f"https://api.github.com/repos/{org}/{repo}/releases/latest"
     ret = ctx.exec(
         f"curl --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' -L -C - '{url}'",  # noqa
-        quiet=True,
+        capture=True,
     )
     return json.loads(ret.stdout)
 
@@ -131,13 +182,7 @@ def get_github_download_url(ctx: TaskContext, org: str, repo: str, regex: str):
         >>> get_github_download_url("VSCodium", "vscodium", r"amd64.deb$")
     """
 
-    url = f"https://api.github.com/repos/{org}/{repo}/releases/latest"
-    ret = ctx.exec(
-        f"curl --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' -L -C - '{url}'",  # noqa
-        quiet=True,
-    )
-    release_json = json.loads(ret.stdout)
-
+    release_json = get_github_release(ctx, org, repo)
     for asset in release_json["assets"]:
         if re.search(regex, asset["name"]):
             return asset["browser_download_url"]
@@ -186,6 +231,8 @@ def usr_binary_install(ctx: TaskContext, app: str, app_url: str):
     Raises:
         NotImplementedError: If the system platform is not Linux.
     """
+    _ensure_curl(ctx)
+
     if ctx.system.platform == "linux":
         # Check if the binary is already installed
         if not os.path.exists(f"/usr/local/bin/{app}"):
@@ -200,7 +247,9 @@ def usr_binary_install(ctx: TaskContext, app: str, app_url: str):
             ctx.log.info(f"{app} already installed")
     else:
         # Raise an error if the platform is not Linux
-        raise NotImplementedError(f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def usr_binary_install_github(ctx: TaskContext, app: str, org: str, repo: str, regex: str):

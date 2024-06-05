@@ -3,9 +3,15 @@
 
 USR=chris
 GWAY=192.168.0.1
-DNS="192.168.0.1, 8.8.8.8, 8.8.4.4, 1.1.1.1"
+DNS="8.8.8.8, 8.8.4.4, 1.1.1.1"
 NOW=`date +%Y-%m-%dT%H-%M-%S`
 BCK=../__backup__/$NOW
+# main IP you want to use on host
+PRIMARY_NIC=enp36s0f0
+PRIMARY_IP=192.168.0.7
+# ip just for bridge on host
+BRIDGE_NIC=enp36s0f1
+BRIDGE_IP=192.168.0.8
 
 mkdir -p $BCK
 
@@ -68,10 +74,10 @@ network:
   renderer: networkd
 
   ethernets:
-    enp38s0:
+    $PRIMARY_NIC:
       dhcp4: false
       dhcp6: false
-      addresses: [192.168.0.5/24]
+      addresses: [$PRIMARY_IP/24]
       routes:
       - to: default
         via: $GWAY
@@ -80,14 +86,14 @@ network:
       nameservers:
         addresses: [$DNS]
 
-    enp39s0:
+    $BRIDGE_NIC:
       dhcp4: false
       dhcp6: false
 
   bridges:
     br0:
-      interfaces: [ enp39s0 ]
-      addresses: [ 192.168.0.6/24 ]
+      interfaces: [ $BRIDGE_NIC ]
+      addresses: [ $BRIDGE_IP/24 ]
       routes:
       - to: default
         via: $GWAY

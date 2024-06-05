@@ -3,6 +3,10 @@ from __task__ import TaskBuilder, TaskContext
 from __system__ import snap_install, apt_install, deb_install, get_github_download_url
 
 
+def _sudoers(ctx: TaskContext):
+    pass
+    # "%sudo   ALL=(ALL:ALL) ALL"
+
 def _dropbox(ctx: TaskContext):
     if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/bin/dropbox-xl"):
@@ -36,6 +40,9 @@ def configure(builder: TaskBuilder):
     )
     builder.add_task(
         module_name, f"{module_name}:filezilla", lambda ctx: apt_install(ctx, "filezilla", "/usr/bin/filezilla")
+    )
+    builder.add_task(
+        module_name, f"{module_name}:xz", lambda ctx: apt_install(ctx, "xz", "/usr/bin/xz")
     )
     builder.add_task(module_name, f"{module_name}:dropbox", _dropbox, deps=["utils:curl"])
     builder.add_task(

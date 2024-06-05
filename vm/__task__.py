@@ -6,7 +6,7 @@ from __system__ import apt_install
 module_name = "vm"
 
 
-def _setup(ctx: TaskContext):
+def _install(ctx: TaskContext):
     if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/sbin/kvm-ok"):
             ctx.exec(
@@ -80,7 +80,7 @@ def _vm_setup_bridge(ctx: TaskContext):
 
 
 def configure(builder: TaskBuilder):
-    builder.add_task(module_name, f"{module_name}:install", _setup)
+    builder.add_task(module_name, f"{module_name}:install", _install)
     builder.add_task(module_name, f"{module_name}:guest", _guest)
     builder.add_task(module_name, f"{module_name}:bridge", _vm_setup_bridge)
     builder.add_task(module_name, f"{module_name}:ce:create", lambda ctx: _vm_create(ctx, "ce"))
