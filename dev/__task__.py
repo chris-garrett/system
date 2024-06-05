@@ -189,6 +189,29 @@ def _conda(ctx: TaskContext):
         )
 
 
+def _deno(ctx: TaskContext):
+    tool = "deno"
+    if "debian" in ctx.system.distro:
+        bin_dir = os.path.expanduser("~/bin")
+        deno = os.path.join(bin_dir, tool)
+        if not os.path.exists(deno):
+            ctx.log.info(f"installing {tool}")
+
+            release_url = system.get_github_download_url(ctx, "denoland", "deno", r"x86_64-unknown-linux-gnu.zip$")
+            ctx.exec(f"curl -o /tmp/deno.zip -L -C - '{release_url}'")
+            ctx.exec(f"unzip /tmp/deno.zip deno -d {bin_dir}")
+            ctx.exec(f"chmod +x {deno}")
+            shutil.rmtree("/tmp/deno.zip", ignore_errors=True)
+        else:
+            ctx.log.info(f"{tool} already installed")
+    else:
+        raise NotImplementedError(
+            f"{tool} not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
+
+
+
 def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:meld", lambda ctx: apt_install(ctx, "meld", "/usr/bin/meld"))
     builder.add_task(
@@ -231,3 +254,4 @@ def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:build-essential", _build_essential)
     builder.add_task(module_name, f"{module_name}:node", _node, deps=["utils:xz"])
     builder.add_task(module_name, f"{module_name}:conda", _conda)
+    builder.add_task(module_name, f"{module_name}:deno", _deno)
