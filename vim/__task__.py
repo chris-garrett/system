@@ -136,13 +136,10 @@ def _install_tmux(ctx: TaskContext):
         ctx.exec(f"ln -sf {ctx.project_dir}/tmuxifier/layouts {tmuxifier_layouts_dir}")
 
         # install tmuxifier shell integration
-        shell_exports = os.path.expanduser("~/.shell_exports")
-        with open(shell_exports, "r") as r:
-            shell_exports_content = r.read()
-
-        if "tmuxifier" not in shell_exports_content:
+        shell_exports = os.path.expanduser("~/.shell.d/tmux")
+        if not os.path.exists(shell_exports):
             ctx.log.info("installing tmuxifier shell integration")
-            with open(shell_exports, "a") as w:
+            with open(shell_exports, "w") as w:
                 w.write("\n")
                 w.write("# tmuxifier\n")
                 w.write('export PATH="~/.tmuxifier/bin:$PATH"\n')
@@ -212,6 +209,6 @@ def _install_all(ctx: TaskContext):
 
 def configure(builder: TaskBuilder):
     module_name = "vi"
-    builder.add_task(module_name, f"{module_name}:all", _install_all, deps=["dev:build-essential"])
+    builder.add_task(module_name, f"{module_name}:all", _install_all, deps=["os:snap", "os:shell", "dev:build-essential"])
     builder.add_task(module_name, f"{module_name}:clean", _clean)
     builder.add_task(module_name, f"{module_name}:ripgrep", _install_ripgrep)

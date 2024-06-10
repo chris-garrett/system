@@ -1,4 +1,5 @@
-from __task__ import TaskBuilder, TaskContext
+from __tasklib__ import TaskBuilder, TaskContext
+from __system__ import apt_install
 from os.path import expanduser
 
 
@@ -31,3 +32,4 @@ def configure(builder: TaskBuilder):
     builder.add_task(module_name, "os:upgrade", _upgrade, deps=["os:update"])
     builder.add_task(module_name, "os:info", _print_info)
     builder.add_task(module_name, "os:free", _disk_free)
+    builder.add_task(module_name, "os:snap", lambda ctx: apt_install(ctx, "snapd", "/usr/bin/snapd"))
