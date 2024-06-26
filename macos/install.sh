@@ -28,6 +28,8 @@ brew install watch
 brew install stats
 brew install watchexec
 
+brew install --cask azure-data-studio
+brew install --cask dbeaver-community
 
 git config --global push.autoSetupRemote true
 
