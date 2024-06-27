@@ -39,8 +39,7 @@ def _install_code(ctx: TaskContext):
             ctx.log.info(f"{tool} already installed")
     else:
         raise NotImplementedError(
-            f"Not implemented on platform: {ctx.system.platform}:{
-                ctx.system.distro}:{ctx.system.arch}"
+            f"Not implemented on platform: {ctx.system.platform}:{ctx.system.distro}:{ctx.system.arch}"
         )
 
 
@@ -60,8 +59,7 @@ def _install_ms_code(ctx: TaskContext):
         else:
             ctx.log.info("already installed")
     else:
-        raise NotImplementedError(f"Not implemented on platform: {
-                                  ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(f"Not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def noop(ctx: TaskContext):

@@ -14,10 +14,8 @@ def configure(builder: TaskBuilder):
     )
     builder.add_task(
         module_name, f"{module_name}:brave", lambda ctx: snap_install(ctx, "brave"))
-    builder.add_task(module_name, f"{
-                     module_name}:chrome", lambda ctx: snap_install(ctx, "chromium"))
-    builder.add_task(module_name, f"{
-                     module_name}:firefox", lambda ctx: snap_install(ctx, "firefox"))
+    builder.add_task(module_name, f"{module_name}:chrome", lambda ctx: snap_install(ctx, "chromium"))
+    builder.add_task(module_name, f"{module_name}:firefox", lambda ctx: snap_install(ctx, "firefox"))
     builder.add_task(
         module_name,
         f"{module_name}:edge",

@@ -43,9 +43,7 @@ def _dotnet_installer(ctx: TaskContext, version: str):
             ctx.log.info(f"dotnet {version} already installed")
     else:
         raise NotImplementedError(
-            f"dotnet {version} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
-        )
+            f"dotnet {version} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def _toolbox(ctx: TaskContext):
@@ -64,10 +62,7 @@ def _toolbox(ctx: TaskContext):
 
             ctx.exec(ret.stdout.strip())
     else:
-        raise NotImplementedError(
-            f"toolbox not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
-        )
+        raise NotImplementedError( f"toolbox not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
 
 
 def _build_essential(ctx: TaskContext):
@@ -79,17 +74,13 @@ def _build_essential(ctx: TaskContext):
         else:
             ctx.log.info(f"{tool} already installed")
     else:
-        raise NotImplementedError(
-            f"{tool} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
-        )
+        raise NotImplementedError( f"{tool} not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
 
 
 def _node(ctx: TaskContext):
     tool = "node"
     tool_version = "v20.14.0"
-    download = f"https://nodejs.org/dist/{
-        tool_version}/node-{tool_version}-linux-x64.tar.xz"
+    download = f"https://nodejs.org/dist/{ tool_version}/node-{tool_version}-linux-x64.tar.xz"
     node_dir = os.path.expanduser(f"~/opt/node-{tool_version}")
 
     if "debian" in ctx.system.distro:
@@ -115,10 +106,7 @@ def _node(ctx: TaskContext):
         else:
             ctx.log.info(f"{tool} {tool_version} already installed")
     else:
-        raise NotImplementedError(
-            f"{tool} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
-        )
+        raise NotImplementedError( f"{tool} not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
 
 
 def _lazygit(ctx: TaskContext):
@@ -137,10 +125,7 @@ def _lazygit(ctx: TaskContext):
         else:
             ctx.log.info(f"{tool} already installed")
     else:
-        raise NotImplementedError(
-            f"lazygit not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
-        )
+        raise NotImplementedError( f"lazygit not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
 
 
 def _conda(ctx: TaskContext):
@@ -153,10 +138,7 @@ def _conda(ctx: TaskContext):
             release_url = "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
             ctx.exec(f"curl -o /tmp/conda.sh -L -C - '{release_url}'")
             ctx.exec(f"bash /tmp/conda.sh -b -u -p {bin_dir}")
-            ctx.exec(
-                f"{os.path.expanduser(
-                    '~/miniconda3/bin/conda create -n py312 python=3.12 -y')}"
-            )
+            ctx.exec( f"{os.path.expanduser( '~/miniconda3/bin/conda create -n py312 python=3.12 -y')}")
             shutil.rmtree("/tmp/conda.sh", ignore_errors=True)
 
             shell_file = os.path.expanduser("~/.shell.d/conda")
@@ -183,10 +165,7 @@ def _conda(ctx: TaskContext):
         else:
             ctx.log.info(f"{tool} already installed")
     else:
-        raise NotImplementedError(
-            f"lazygit not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
-        )
+        raise NotImplementedError( f"lazygit not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
 
 
 def _deno(ctx: TaskContext):
@@ -205,10 +184,7 @@ def _deno(ctx: TaskContext):
         else:
             ctx.log.info(f"{tool} already installed")
     else:
-        raise NotImplementedError(
-            f"{tool} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
-        )
+        raise NotImplementedError( f"{tool} not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
 
 
 
@@ -216,14 +192,12 @@ def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:meld", lambda ctx: apt_install(ctx, "meld", "/usr/bin/meld"))
     builder.add_task(
         module_name,
-        f"{
-            module_name}:postman",
+        f"{module_name}:postman",
         lambda ctx: snap_install(ctx, "postman"),
     )
     builder.add_task(
         module_name,
-        f"{
-            module_name}:dbeaver",
+        f"{module_name}:dbeaver",
         lambda ctx: snap_install(ctx, "dbeaver-ce"),
     )
     builder.add_task(module_name, f"{module_name}:git:config", _git_config)
@@ -236,8 +210,7 @@ def configure(builder: TaskBuilder):
         lambda ctx: None,
         deps=[
             f"{module_name}:dotnet:6",
-            f"{
-                module_name}:dotnet:7",
+            f"{module_name}:dotnet:7",
             f"{module_name}:dotnet:8",
         ],
     )
