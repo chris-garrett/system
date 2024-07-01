@@ -32,10 +32,10 @@ return {
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       local lspconfig = require("lspconfig")
-      --lspconfig.tsserver.setup({
-      --  root_dir = lspconfig.util.root_pattern("package.json"),
-      --  capabilities = capabilities,
-      --})
+      lspconfig.tsserver.setup({
+        root_dir = lspconfig.util.root_pattern("package.json"),
+        capabilities = capabilities,
+      })
       lspconfig.html.setup({
         capabilities = capabilities,
       })
@@ -45,14 +45,15 @@ return {
       lspconfig.pylsp.setup({
         capabilities = capabilities,
       })
-      lspconfig.denols.setup({
-        capabilities = capabilities,
-      })
+      --lspconfig.denols.setup({
+      --  capabilities = capabilities,
+      --})
 
       vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
       vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {})
       vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, {})
       vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {})
+      vim.keymap.set("n", "<leader>ce", vim.diagnostic.open_float, {})
       vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {})
     end,
   },
