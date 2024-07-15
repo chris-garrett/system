@@ -139,6 +139,15 @@ class SystemContext(NamedTuple):
     arch: str  # x86_64, arm64
     distro: str  # Debian, Arch, RHEL
 
+    def is_unix(self):
+        return self.platform == "linux" or self.platform == "darwin"
+
+    def is_linux(self):
+        return self.platform == "linux"
+
+    def is_mac(self):
+        return self.platform == "darwin"
+
 
 def exec(
     cmd: str, cwd: str = None, logger: Logger = None, venv_dir: str = None, capture: bool = False, input: str = None
@@ -253,12 +262,45 @@ def _ensure_venv(ctx: TaskContext):
         ctx.exec([ctx.python_exe, "-m", "venv", ctx.venv_dir])
 
 
+def _build_system_distro(content: str) -> str:
+    """
+    Returns distro for os-release contents
+    """
+
+    id = ""
+    id_like = None
+    for line in content.split():
+        if line.startswith("ID_LIKE="):
+            id_like = line.split("=")[1].strip()
+        if line.startswith("ID="):
+            id = line.split("=")[1].strip()
+    return id_like if id_like else id
+
+
+def _build_system_context() -> SystemContext:
+    """
+    Builds a context object for the system.
+    """
+
+    distro = ""
+    if platform.system() == "Linux" and os.path.exists("/etc/os-release"):
+        with open("/etc/os-release") as f:
+            distro = _build_system_distro(f.read())
+
+    return SystemContext(
+        platform=platform.system().lower(),
+        arch=platform.machine().lower(),
+        distro=distro.lower(),
+    )
+
+
 def _load_tasks(task: TaskFileDefinition) -> typing.Dict[str, TaskDefinition]:
     """
     Builds a list of N tasks based on what was specified in configure().
     """
     tasks: typing.Dict[str, TaskDefinition] = {}
     builder = TaskBuilder()
+    builder.system = _build_system_context()
     task.func(builder)
     for module, name, func, deps in builder.parsers:
         tasks[name] = TaskDefinition(
@@ -305,38 +347,6 @@ def _find_task_files() -> List[str]:
     Finds files that match naming convention
     """
     return [f for f in glob.glob("**/__task__.py", recursive=True) if os.path.isfile(f)]
-
-
-def _build_system_distro(content: str) -> str:
-    """
-    Returns distro for os-release contents
-    """
-
-    id = ""
-    id_like = None
-    for line in content.split():
-        if line.startswith("ID_LIKE="):
-            id_like = line.split("=")[1].strip()
-        if line.startswith("ID="):
-            id = line.split("=")[1].strip()
-    return id_like if id_like else id
-
-
-def _build_system_context() -> SystemContext:
-    """
-    Builds a context object for the system.
-    """
-
-    distro = ""
-    if platform.system() == "Linux" and os.path.exists("/etc/os-release"):
-        with open("/etc/os-release") as f:
-            distro = _build_system_distro(f.read())
-
-    return SystemContext(
-        platform=platform.system().lower(),
-        arch=platform.machine().lower(),
-        distro=distro.lower(),
-    )
 
 
 def _build_task_context(task: TaskDefinition) -> TaskContext:

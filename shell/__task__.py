@@ -7,22 +7,26 @@ from __task__ import TaskBuilder, TaskContext
 rx_alias = re.compile(r"^alias\s+(\w+)\s*=\s*(.*)$")
 
 
-def _configure_bashrc(ctx: TaskContext):
-    if ctx.system.platform == "linux":
-        bashrc = os.path.expanduser("~/.bashrc")
+def _configure_shell(ctx: TaskContext):
+    if ctx.system.is_unix():
+        shell_file = "bashrc"
+        if ctx.system.is_mac():
+            shell_file = "zshrc"
+
+        shell_file = os.path.expanduser(f"~/.{shell_file}")
         shelld = os.path.expanduser("~/.shell.d")
 
         add_shelld = False
-        if os.path.exists(bashrc):
-            with open(bashrc) as f:
+        if os.path.exists(shell_file):
+            with open(shell_file) as f:
                 contents = f.read()
                 if "shell.d" not in contents:
                     add_shelld = True
 
         if add_shelld:
-            ctx.log.info("shell.d: updating .bashrc")
+            ctx.log.info(f"shell.d: updating .{shell_file}")
 
-            with open(bashrc, "a") as f:
+            with open(shell_file, "a") as f:
                 f.write(
                     """
 # Source all scripts in ~/.shell.d
@@ -36,18 +40,18 @@ fi
 """
                 )
         else:
-            ctx.log.info("shell.d: .bashrc already updated")
+            ctx.log.info(f"shell.d: .{shell_file} already updated")
 
         if not os.path.exists(shelld):
             ctx.log.info("shell.d: creating directory")
             os.makedirs(shelld, exist_ok=True)
 
     else:
-        raise NotImplementedError(f".bashrc not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(f".${shell_file} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def _configure_shell_aliases(ctx: TaskContext):
-    if ctx.system.platform == "linux":
+    if ctx.system.is_unix():
         shell_aliases = os.path.expanduser("~/.shell.d/aliases")
 
         aliases = {
@@ -84,19 +88,19 @@ def _configure_shell_aliases(ctx: TaskContext):
 
 
 def _configure_bin(ctx: TaskContext):
-    if ctx.system.platform == "linux":
+    if ctx.system.is_unix():
         shell_dir = os.path.expanduser("~/bin")
         shell_file = os.path.expanduser("~/.shell.d/bin")
 
         os.makedirs(shell_dir, exist_ok=True)
         with open(shell_file, "w") as f:
-            f.write("export PATH=~/bin:$PATH\n")
+            f.write("export PATH=$HOME/bin:$PATH\n")
     else:
-        raise NotImplementedError( f"shell bin not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(f"shell bin not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def _configure_ssh(ctx: TaskContext):
-    if ctx.system.platform == "linux":
+    if ctx.system.is_unix():
         ssh_path = os.path.expanduser("~/.ssh")
         shell_file = os.path.expanduser("~/.shell.d/ssh")
         with open(shell_file, "w") as f:
@@ -113,7 +117,7 @@ def _configure_ssh(ctx: TaskContext):
 
 
 def _setup(ctx: TaskContext):
-    _configure_bashrc(ctx)
+    _configure_shell(ctx)
     _configure_shell_aliases(ctx)
     _configure_bin(ctx)
     _configure_ssh(ctx)
@@ -122,3 +126,4 @@ def _setup(ctx: TaskContext):
 def configure(builder: TaskBuilder):
     module_name = "shell"
     builder.add_task(module_name, "os:shell", _setup)
+    builder.add_task(module_name, "os:config-shell", _configure_shell)

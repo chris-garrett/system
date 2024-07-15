@@ -1,7 +1,8 @@
 import os
 import shutil
 
-from __system__ import apt_install, deb_install_github, snap_install, download_to_tmp, install_msi
+from __system__ import (apt_install, deb_install_github, snap_install, download_to_tmp_file, 
+    install_msi, brew_install, get_github_download_url, extract_tmp_file_to)
 from __task__ import TaskBuilder, TaskContext
 
 
@@ -17,10 +18,16 @@ def _clean(ctx: TaskContext):
 
 def _install_neovim(ctx: TaskContext):
 
-    if ctx.system.platform == "linux":
+    if ctx.system.is_unix():
+        if ctx.system.is_mac():
+            brew_install(ctx, "nvim")
+        elif ctx.system.is_linux():
+            # install neovim
+            snap_install(ctx, "nvim", classic=True)
 
-        # install neovim
-        snap_install(ctx, "nvim", classic=True)
+        config_dir = os.path.expanduser("~/.config")
+        if not os.path.exists(config_dir):
+            os.makedirs(config_dir, exist_ok=True)
 
         nvim_dir = os.path.expanduser("~/.config/nvim")
         if not os.path.exists(nvim_dir):
@@ -39,7 +46,7 @@ def _install_neovim(ctx: TaskContext):
         #     ctx.log.info("neovim already installed")
         #     return
 
-        # fname = download_to_tmp(ctx,
+        # fname = download_to_tmp_file(ctx,
         #                         url="https://github.com/neovim/neovim/releases/latest/download/nvim-win64.msi",
         #                         name="nvim.msi"
         #                         )
@@ -51,10 +58,12 @@ def _install_neovim(ctx: TaskContext):
 
 def _install_alacritty(ctx: TaskContext):
 
-    if ctx.system.platform == "linux":
-
-        # install alacritty
-        snap_install(ctx, "alacritty", classic=True)
+    if ctx.system.is_unix():
+        if ctx.system.is_mac():
+            brew_install(ctx, "alacritty", cask=True)
+        elif ctx.system.is_linux():
+            # install alacritty
+            snap_install(ctx, "alacritty", classic=True)
 
         config_dir = os.path.expanduser("~/.config")
 
@@ -86,12 +95,13 @@ def _install_alacritty(ctx: TaskContext):
 
 
 def _install_nerdfonts(ctx: TaskContext):
-    if ctx.system.platform == "linux":
-        if not os.path.exists(os.path.expanduser("~/.local/share/fonts/NerdFonts")):
+    if ctx.system.is_unix():
+        font_dir = os.path.expanduser("~/.local/share/fonts/NerdFonts" if ctx.system.is_linux() else "~/Library/Fonts/NerdFonts")
+        if not os.path.exists(font_dir):
             ctx.log.info("installing nerd fonts")
-            if not os.path.exists("/tmp/nerd-fonts"):
-                ctx.exec("git clone --depth=1 https://github.com/ryanoasis/nerd-fonts.git /tmp/nerd-fonts")
-            ctx.exec("/bin/bash /tmp/nerd-fonts/install.sh UbuntuMono")
+            os.makedirs(font_dir, exist_ok=True)
+            download_to_tmp_file(ctx, "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.tar.xz", "ubuntumono.tar.xz")
+            ctx.exec(f"tar xvf tmp/ubuntumono.tar.xz -C {font_dir}")
         else:
             ctx.log.info("nerd fonts already installed")
 
@@ -102,10 +112,12 @@ def _install_nerdfonts(ctx: TaskContext):
 
 def _install_tmux(ctx: TaskContext):
 
-    if ctx.system.platform == "linux":
-
-        # install tmux
-        apt_install(ctx, "tmux", "/usr/bin/tmux")
+    if ctx.system.is_unix():
+        if ctx.system.is_linux():
+            # install tmux
+            apt_install(ctx, "tmux", "/usr/bin/tmux")
+        elif ctx.system.is_mac():
+            brew_install(ctx, "tmux")
 
         # link tmux config
         ctx.log.info("installing tmux config")
@@ -131,9 +143,10 @@ def _install_tmux(ctx: TaskContext):
             ctx.log.info("tmuxifier already installed")
 
         # link tmuxifier layouts
-        tmuxifier_layouts_dir = f"{tmuxifier_dir}/layouts"
-        shutil.rmtree(tmuxifier_layouts_dir, ignore_errors=True)
-        ctx.exec(f"ln -sf {ctx.project_dir}/tmuxifier/layouts {tmuxifier_layouts_dir}")
+        tmuxifier_layouts_dir_src = os.path.join(ctx.project_dir, "tmuxifier", "layouts")
+        tmuxifier_layouts_dir_dest = os.path.join(tmuxifier_dir, "layouts")
+        shutil.rmtree(tmuxifier_layouts_dir_dest, ignore_errors=True)
+        ctx.exec(f"ln -sf {tmuxifier_layouts_dir_src} {tmuxifier_layouts_dir_dest}")
 
         # install tmuxifier shell integration
         shell_exports = os.path.expanduser("~/.shell.d/tmux")
@@ -142,7 +155,7 @@ def _install_tmux(ctx: TaskContext):
             with open(shell_exports, "w") as w:
                 w.write("\n")
                 w.write("# tmuxifier\n")
-                w.write('export PATH="~/.tmuxifier/bin:$PATH"\n')
+                w.write('export PATH="$HOME/tmuxifier/bin:$PATH"\n')
                 w.write('eval "$(tmuxifier init -)"\n')
         else:
             ctx.log.info("tmuxifier shell integration already installed")
@@ -187,28 +200,30 @@ def _install_xmodmap(ctx: TaskContext):
 def _install_ripgrep(ctx: TaskContext):
     if ctx.system.platform == "linux":
         deb_install_github(ctx, "ripgrep", "/usr/bin/rg", "BurntSushi", "ripgrep", "amd64.deb")
+    elif ctx.system.is_mac():
+        release_url = get_github_download_url(ctx, "BurntSushi", "ripgrep", "aarch64-apple-darwin.tar.gz")
+        file_part = release_url.split("/")[-1].replace(".tar.gz","")
+        download_to_tmp_file(ctx, release_url, "ripgrep.tar.gz")
+        extract_tmp_file_to(ctx, "ripgrep.tar.gz", os.path.expanduser("~/bin"), args="--strip-components=1", filters=f"{file_part}/rg")
     else:
         raise NotImplementedError(f"ripgrep not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
-def _install_python(ctx: TaskContext):
-    if ctx.system.platform == "linux":
-        apt_install(ctx, "python3-venv", "/usr/bin/python3-venv")
-    else:
-        raise NotImplementedError(f"ripgrep not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 def _install_all(ctx: TaskContext):
-    _install_python(ctx)
-    _install_neovim(ctx)
-
-    _install_alacritty(ctx)
     _install_tmux(ctx)
+    _install_neovim(ctx)
+    _install_ripgrep(ctx)
+    _install_alacritty(ctx)
     _install_nerdfonts(ctx)
     _install_xmodmap(ctx)
-    _install_ripgrep(ctx)
 
 
 def configure(builder: TaskBuilder):
     module_name = "vi"
-    builder.add_task(module_name, f"{module_name}:all", _install_all, deps=["os:snap", "os:shell", "dev:build-essential"])
+
+    all_deps = ["os:snap", "os:shell", "dev:build-essential"] if builder.system.is_linux() else ["os:shell"]
+    builder.add_task(module_name, f"{module_name}:all", _install_all, deps=all_deps)
+
     builder.add_task(module_name, f"{module_name}:clean", _clean)
     builder.add_task(module_name, f"{module_name}:ripgrep", _install_ripgrep)
+    builder.add_task(module_name, f"{module_name}:tmux", _install_tmux, deps=["os:ensure_shelld"])

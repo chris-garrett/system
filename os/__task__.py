@@ -1,5 +1,6 @@
 from __tasklib__ import TaskBuilder, TaskContext
 from __system__ import apt_install
+import os
 from os.path import expanduser
 
 
@@ -26,6 +27,18 @@ def _disk_free(ctx: TaskContext):
     _print_disk_free(expanduser("~"))
 
 
+def _config_bin(ctx: TaskContext):
+    if ctx.system.is_unix():
+        shell_dir = os.path.expanduser("~/bin")
+        shell_file = os.path.expanduser("~/.shell.d/bin")
+
+        os.makedirs(shell_dir, exist_ok=True)
+        with open(shell_file, "w") as f:
+            f.write("export PATH=~/bin:$PATH\n")
+    else:
+        raise NotImplementedError(f"shell bin not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+
+
 def configure(builder: TaskBuilder):
     module_name = "os"
     builder.add_task(module_name, "os:update", lambda ctx: ctx.exec("sudo apt update"))
@@ -33,3 +46,4 @@ def configure(builder: TaskBuilder):
     builder.add_task(module_name, "os:info", _print_info)
     builder.add_task(module_name, "os:free", _disk_free)
     builder.add_task(module_name, "os:snap", lambda ctx: apt_install(ctx, "snapd", "/usr/bin/snapd"))
+    builder.add_task(module_name, "os:config-bin", _config_bin, deps=["shell:config_shell"])

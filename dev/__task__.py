@@ -111,13 +111,16 @@ def _node(ctx: TaskContext):
 
 def _lazygit(ctx: TaskContext):
     tool = "lazygit"
-    if "debian" in ctx.system.distro:
+    if ctx.system.is_unix():
+        platform = "Darwin" if ctx.system.platform == "darwin" else "Linux"
+        zip_name = rf"{platform}_{ctx.system.arch}.tar.gz$"
+        
         bin_dir = os.path.expanduser("~/bin")
         lazygit = os.path.join(bin_dir, tool)
         if not os.path.exists(lazygit):
             ctx.log.info(f"installing {tool}")
 
-            release_url = system.get_github_download_url(ctx, "jesseduffield", "lazygit", r"Linux_x86_64.tar.gz$")
+            release_url = system.get_github_download_url(ctx, "jesseduffield", "lazygit", zip_name)
             ctx.exec(f"curl -o /tmp/lazygit.tar.gz -L -C - '{release_url}'")
             ctx.exec(f"tar xvf /tmp/lazygit.tar.gz -C {bin_dir} lazygit")
             ctx.exec(f"chmod +x {lazygit}")
@@ -203,7 +206,7 @@ def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:git:config", _git_config)
     builder.add_task(module_name, f"{module_name}:git:lfs", lambda ctx: apt_install(ctx, "git-lfs", "/usr/bin/git-lfs"))
     builder.add_task(module_name, f"{module_name}:gitkraken", lambda ctx: snap_install(ctx, "gitkraken", classic=True))
-    builder.add_task(module_name, f"{module_name}:lazygit", _lazygit)
+    builder.add_task(module_name, f"{module_name}:lazygit", _lazygit, deps=["os:config-bin"])
     builder.add_task(
         module_name,
         f"{module_name}:dotnet:all",

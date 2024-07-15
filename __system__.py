@@ -47,6 +47,20 @@ def download_to_tmp(ctx: TaskContext, url, name, force_redownload=False):
     return fname_path
 
 
+def download_to_tmp_file(ctx: TaskContext, url, name, force_redownload=False):
+    return download_to_tmp(ctx, url, name, force_redownload)
+
+
+def extract_tmp_file_to(ctx: TaskContext, name, dest, args=None, filters=None):
+    if not os.path.exists(dest):
+        os.makedirs(dest, exist_ok=True)
+    tmpfile = os.path.join(get_tmp_dir(ctx), name)
+    args = f" {args}" if args else ""
+    filters = f" {filters}" if filters else ""
+
+    ctx.exec(f"tar xvf {tmpfile} -C {dest}{args}{filters}")
+
+
 def snap_install(ctx: TaskContext, app: str, classic=False, edge=False):
     """
     Function to install an application using snap package manager.
@@ -129,6 +143,33 @@ def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
         raise NotImplementedError(
             f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
         )
+
+
+def brew_install(ctx: TaskContext, app: str, cask: bool = False, file_test: str = None):
+    """
+    Function to install an application using brew on MacOS
+
+    Args:
+        ctx (TaskContext): Context object that provides system details and logging.
+        app (str): The name of the application to be installed.
+        file_test (str): The path to check if the application is already installed.
+
+    Raises:
+        NotImplementedError: If the system distro is not darwin.
+    """
+    if not ctx.system.is_mac():
+        raise NotImplementedError("Cannont run brew on this platform {ctx.system.platform}")
+
+    if not file_test:
+        file_test = f"/opt/homebrew/bin/{app}"
+
+    cask = "--cask " if cask else ""
+
+    if not os.path.exists(file_test):
+        ctx.log.info(f"installing {app}")
+        ctx.exec(f"brew install {cask}{app}")
+    else:
+        ctx.log.info(f"{app} already installed")
 
 
 def get_github_release(ctx: TaskContext, org: str, repo: str) -> dict:
