@@ -49,11 +49,17 @@ return {
       --  capabilities = capabilities,
       --})
 
+     -- show get popup
       vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
+      -- show get definition
       vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {})
+      -- show get references
       vim.keymap.set("n", "<leader>gr", vim.lsp.buf.references, {})
+      -- show code actions
       vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {})
+      -- show code error popup
       vim.keymap.set("n", "<leader>ce", vim.diagnostic.open_float, {})
+      -- rename symbol
       vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {})
     end,
   },
