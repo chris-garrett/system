@@ -3,7 +3,7 @@ import re
 
 from __system__ import (get_github_release, usr_binary_install,
                         usr_binary_install_github)
-from __task__ import TaskBuilder, TaskContext
+from __tasklib__ import TaskBuilder, TaskContext
 
 module_name = "containers"
 

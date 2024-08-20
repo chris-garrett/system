@@ -2,7 +2,7 @@ import os
 import shutil
 
 from __system__ import apt_install, deb_install_github, snap_install, download_to_tmp, install_msi
-from __task__ import TaskBuilder, TaskContext
+from __tasklib__ import TaskBuilder, TaskContext
 
 
 def _clean(ctx: TaskContext):

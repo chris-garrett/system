@@ -2,7 +2,7 @@ import os
 import re
 from textwrap import dedent
 
-from __task__ import TaskBuilder, TaskContext
+from __tasklib__ import TaskBuilder, TaskContext
 
 rx_alias = re.compile(r"^alias\s+(\w+)\s*=\s*(.*)$")
 

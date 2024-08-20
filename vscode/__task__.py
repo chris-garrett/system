@@ -1,5 +1,5 @@
 import os
-from __task__ import TaskContext, TaskBuilder
+from __tasklib__ import TaskContext, TaskBuilder
 from __system__ import get_github_download_url, deb_install
 
 

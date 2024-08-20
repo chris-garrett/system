@@ -1,5 +1,5 @@
 from __system__ import snap_install
-from __task__ import TaskBuilder, TaskContext
+from __tasklib__ import TaskBuilder, TaskContext
 
 module_name = "comms"
 

@@ -1,5 +1,5 @@
 from __system__ import deb_install, snap_install
-from __task__ import TaskBuilder
+from __tasklib__ import TaskBuilder
 
 module_name = "browsers"
 

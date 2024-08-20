@@ -1,5 +1,5 @@
 from __system__ import apt_install, deb_install
-from __task__ import TaskBuilder, TaskContext
+from __tasklib__ import TaskBuilder, TaskContext
 
 
 def _protontricks(ctx: TaskContext):

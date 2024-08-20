@@ -3,7 +3,7 @@ import os
 import re
 import uuid
 
-from __task__ import TaskContext
+from __tasklib__ import TaskContext
 
 
 def _ensure_curl(ctx: TaskContext):
@@ -12,7 +12,10 @@ def _ensure_curl(ctx: TaskContext):
 
 
 def get_shelld_dir(ctx: TaskContext):
-    return os.path.abspath(os.path.expanduser("~/.shell.d"))
+    shell_dir = os.path.abspath(os.path.expanduser("~/.shell.d"))
+    if not os.path.exists(shell_dir):
+        os.makedirs(shell_dir, exist_ok=True)
+    return shell_dir
 
 
 def get_tmp_dir(ctx: TaskContext):
