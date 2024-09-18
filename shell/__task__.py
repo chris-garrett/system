@@ -8,9 +8,11 @@ rx_alias = re.compile(r"^alias\s+(\w+)\s*=\s*(.*)$")
 
 
 def _configure_bashrc(ctx: TaskContext):
-    if ctx.system.platform == "linux":
-        bashrc = os.path.expanduser("~/.bashrc")
+    if ctx.system.platform == "linux" or ctx.system.platform == "darwin":
+        rc_name = ".bashrc" if ctx.system.platform == "linux" else ".zshrc"
+        bashrc = os.path.expanduser(f"~/{rc_name}")
         shelld = os.path.expanduser("~/.shell.d")
+        ctx.log.info(f"updating {bashrc} with shell.d")
 
         add_shelld = False
         if os.path.exists(bashrc):
@@ -20,7 +22,7 @@ def _configure_bashrc(ctx: TaskContext):
                     add_shelld = True
 
         if add_shelld:
-            ctx.log.info("shell.d: updating .bashrc")
+            ctx.log.info(f"shell.d: updating {rc_name}")
 
             with open(bashrc, "a") as f:
                 f.write(
@@ -36,7 +38,7 @@ fi
 """
                 )
         else:
-            ctx.log.info("shell.d: .bashrc already updated")
+            ctx.log.info(f"shell.d: {rc_name} already updated")
 
         if not os.path.exists(shelld):
             ctx.log.info("shell.d: creating directory")
@@ -47,7 +49,7 @@ fi
 
 
 def _configure_shell_aliases(ctx: TaskContext):
-    if ctx.system.platform == "linux":
+    if ctx.system.platform == "linux" or ctx.system.platform == "darwin":
         shell_aliases = os.path.expanduser("~/.shell.d/aliases")
 
         aliases = {
@@ -84,19 +86,26 @@ def _configure_shell_aliases(ctx: TaskContext):
 
 
 def _configure_bin(ctx: TaskContext):
-    if ctx.system.platform == "linux":
+    if ctx.system.platform == "linux" or ctx.system.platform == "darwin":
         shell_dir = os.path.expanduser("~/bin")
         shell_file = os.path.expanduser("~/.shell.d/bin")
 
         os.makedirs(shell_dir, exist_ok=True)
         with open(shell_file, "w") as f:
             f.write("export PATH=~/bin:$PATH\n")
+
+        if ctx.system.platform == "darwin":
+            shell_file = os.path.expanduser("~/.shell.d/brew")
+            os.makedirs(shell_dir, exist_ok=True)
+            with open(shell_file, "w") as f:
+                f.write("export PATH=/opt/homebrew/bin:/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH\n")
+
     else:
         raise NotImplementedError( f"shell bin not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
 
 
 def _configure_ssh(ctx: TaskContext):
-    if ctx.system.platform == "linux":
+    if ctx.system.platform == "linux" or ctx.system.platform == "darwin":
         ssh_path = os.path.expanduser("~/.ssh")
         shell_file = os.path.expanduser("~/.shell.d/ssh")
         with open(shell_file, "w") as f:

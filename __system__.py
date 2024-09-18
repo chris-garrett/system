@@ -106,6 +106,32 @@ def apt_install(ctx: TaskContext, app: str, file_test: str):
         )
 
 
+def brew_install(ctx: TaskContext, app: str, file_test: str = None):
+    """
+    Function to install an application using brew package manager.
+
+    Args:
+        ctx (TaskContext): Context object that provides system details and logging.
+        app (str): The name of the application to be installed.
+        file_test (str): The path to check if the application is already installed.
+
+    Raises:
+        NotImplementedError: If the system distro is not debian.
+    """
+
+    if "darwin" in ctx.system.platform:
+        file_test = file_test if file_test and file_test.startswith("/") else f"/opt/homebrew/bin/{app}"
+        if not os.path.exists(file_test):
+            ctx.log.info(f"installing {app}")
+            ctx.exec(f"brew install {app}")
+        else:
+            ctx.log.info(f"{app} already installed")
+    else:
+        raise NotImplementedError(
+            f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
+
+
 def deb_install(ctx: TaskContext, app: str, file_test: str, deb_url: str):
     """
     Function to install an application via a .deb file.

@@ -2,9 +2,8 @@ import os
 import shutil
 from textwrap import dedent
 
-import __system__ as system
-from __system__ import (apt_install, download_to_tmp, get_shelld_dir,
-                        get_tmp_dir, snap_install)
+from __system__ import (apt_install, brew_install, download_to_tmp, brew_install,
+                        get_shelld_dir, get_tmp_dir, snap_install)
 from __tasklib__ import TaskBuilder, TaskContext
 
 module_name = "dev"
@@ -58,7 +57,8 @@ def _dotnet_installer(ctx: TaskContext, version: str):
             ctx.log.info(f"dotnet {version} already installed")
     else:
         raise NotImplementedError(
-            f"dotnet {version} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+            f"dotnet {version} not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
         )
 
 
@@ -82,7 +82,9 @@ def _toolbox(ctx: TaskContext):
             ctx.exec(ret.stdout.strip())
     else:
         raise NotImplementedError(
-            f"toolbox not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+            f"toolbox not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _build_essential(ctx: TaskContext):
@@ -95,42 +97,42 @@ def _build_essential(ctx: TaskContext):
             ctx.log.info(f"{tool} already installed")
     else:
         raise NotImplementedError(
-            f"{tool} not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+            f"{tool} not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _node(ctx: TaskContext):
     tool = "node"
-    tool_version = "v20.14.0"
-    download = f"https://nodejs.org/dist/{ tool_version}/node-{tool_version}-linux-x64.tar.xz"
-    node_dir = os.path.expanduser(f"~/opt/node-{tool_version}")
+    tool_version = "20"
+    node_dir = os.path.expanduser("~/.nvm")
 
-    if "debian" in ctx.system.distro:
+    if ctx.system.platform in ("linux", "darwin"):
         if not os.path.exists(node_dir):
-            ctx.log.info(f"installing {tool} {tool_version}")
-
-            tmp_dir = os.path.join(get_tmp_dir(ctx), "node")
-            zip_file = os.path.join(tmp_dir, "node.xz")
-            unzip_dir = os.path.join(get_tmp_dir(ctx), "node")
-
-            # download, unpack and move to ~/opt
-            os.makedirs(unzip_dir, exist_ok=True)
-            zip = download_to_tmp(
-                ctx, download, os.path.join("node", "node.xz"))
-            ctx.exec(f"tar xvf {zip_file} -C {unzip_dir}")
-            shutil.move(os.path.join(
-                unzip_dir, f"node-{tool_version}-linux-x64"), node_dir)
-            shutil.rmtree(tmp_dir)
-
-            # add to shell
-            shell_file = os.path.join(get_shelld_dir(ctx), "node")
-            with open(shell_file, "w") as f:
-                f.write(f"export NODE_HOME=~/opt/node-{tool_version}\n")
-                f.write("export PATH=$NODE_HOME/bin:$PATH\n")
+            ctx.exec(
+                "curl -o /tmp/nvm.sh -L -C - https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh")
+            ctx.exec("bash /tmp/nvm.sh")
+            # TODO: fix this
+            # ctx.exec(f"zsh -l 'nvm install 20'")
         else:
             ctx.log.info(f"{tool} {tool_version} already installed")
+
+        with open(os.path.expanduser("~/.shell.d/nvm"), "w") as f:
+            f.write(
+                dedent(
+                    """
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+            """
+                )
+            )
+
     else:
         raise NotImplementedError(
-            f"{tool} not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+            f"{tool} not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _lazygit(ctx: TaskContext):
@@ -149,9 +151,13 @@ def _lazygit(ctx: TaskContext):
             shutil.rmtree("/tmp/lazygit.tar.gz", ignore_errors=True)
         else:
             ctx.log.info(f"{tool} already installed")
+    elif "darwin" in ctx.system.platform:
+        brew_install(ctx, "lazygit")
     else:
         raise NotImplementedError(
-            f"lazygit not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+            f"lazygit not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _conda(ctx: TaskContext):
@@ -165,7 +171,9 @@ def _conda(ctx: TaskContext):
             ctx.exec(f"curl -o /tmp/conda.sh -L -C - '{release_url}'")
             ctx.exec(f"bash /tmp/conda.sh -b -u -p {bin_dir}")
             ctx.exec(
-                f"{os.path.expanduser( '~/miniconda3/bin/conda create -n py312 python=3.12 -y')}")
+                f"{os.path.expanduser(
+                    '~/miniconda3/bin/conda create -n py312 python=3.12 -y')}"
+            )
             shutil.rmtree("/tmp/conda.sh", ignore_errors=True)
 
             shell_file = os.path.expanduser("~/.shell.d/conda")
@@ -197,7 +205,9 @@ def _conda(ctx: TaskContext):
             ctx.log.info(f"{tool} already installed")
     else:
         raise NotImplementedError(
-            f"lazygit not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+            f"lazygit not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _deno(ctx: TaskContext):
@@ -218,7 +228,22 @@ def _deno(ctx: TaskContext):
             ctx.log.info(f"{tool} already installed")
     else:
         raise NotImplementedError(
-            f"{tool} not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+            f"{tool} not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
+
+
+def _git_lfs(ctx: TaskContext):
+    tool = "git-lfs"
+    if "debian" in ctx.system.distro:
+        apt_install(ctx, "git-lfs", "/usr/bin/git-lfs")
+    elif "darwin" in ctx.system.platform:
+        brew_install(ctx, "git-lfs")
+    else:
+        raise NotImplementedError(
+            f"{tool} not implemented on platform: {
+                ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def configure(builder: TaskBuilder):
@@ -235,8 +260,7 @@ def configure(builder: TaskBuilder):
         lambda ctx: snap_install(ctx, "dbeaver-ce"),
     )
     builder.add_task(module_name, f"{module_name}:git:config", _git_config)
-    builder.add_task(module_name, f"{module_name}:git:lfs", lambda ctx: apt_install(
-        ctx, "git-lfs", "/usr/bin/git-lfs"))
+    builder.add_task(module_name, f"{module_name}:git:lfs", _git_lfs)
     builder.add_task(module_name, f"{module_name}:gitkraken", lambda ctx: snap_install(
         ctx, "gitkraken", classic=True))
     builder.add_task(module_name, f"{module_name}:lazygit", _lazygit)

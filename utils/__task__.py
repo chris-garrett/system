@@ -1,7 +1,7 @@
 import os
 
 from __system__ import (apt_install, deb_install, get_github_download_url,
-                        snap_install)
+                        snap_install, brew_install)
 from __tasklib__ import TaskBuilder, TaskContext
 
 
@@ -15,7 +15,8 @@ def _dropbox(ctx: TaskContext):
         if not os.path.exists("/usr/bin/dropbox-xl"):
             user_home = os.path.expanduser("~")
             ctx.exec(
-                f"curl -o /tmp/dropbox.tar.gz -L -C - 'https://www.dropbox.com/download?plat=lnx.{ctx.system.arch}'"
+                f"curl -o /tmp/dropbox.tar.gz -L -C - 'https://www.dropbox.com/download?plat=lnx.{
+                    ctx.system.arch}'"
             )
             ctx.exec(f"tar xvf /tmp/dropbox.tar.gz -C {user_home}")
         else:
@@ -33,6 +34,16 @@ def _curl(ctx: TaskContext):
     else:
         raise NotImplementedError(
             f"dropbox not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+
+
+def _install_xz(ctx: TaskContext):
+    if "debian" in ctx.system.distro:
+        apt_install(ctx, "xz", "/usr/bin/xz")
+    elif "darwin" in ctx.system.platform:
+        brew_install(ctx, "xz")
+    else:
+        raise NotImplementedError(
+            f"xz not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def configure(builder: TaskBuilder):
@@ -60,8 +71,7 @@ def configure(builder: TaskBuilder):
         module_name, f"{module_name}:filezilla", lambda ctx: apt_install(
             ctx, "filezilla", "/usr/bin/filezilla")
     )
-    builder.add_task(module_name, f"{module_name}:xz", lambda ctx: apt_install(
-        ctx, "xz", "/usr/bin/xz"))
+    builder.add_task(module_name, f"{module_name}:xz", _install_xz)
     builder.add_task(
         module_name, f"{module_name}:dropbox", _dropbox, deps=["utils:curl"])
     builder.add_task(

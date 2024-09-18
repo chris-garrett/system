@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from __system__ import apt_install, deb_install_github, snap_install, download_to_tmp, install_msi
+from __system__ import apt_install, deb_install_github, snap_install, download_to_tmp, install_msi, brew_install
 from __tasklib__ import TaskBuilder, TaskContext
 
 
@@ -17,14 +17,16 @@ def _clean(ctx: TaskContext):
 
 def _install_neovim(ctx: TaskContext):
 
+    def install_config_posix():
+        nvim_dir = os.path.expanduser("~/.config/nvim")
+        if not os.path.exists(nvim_dir):
+            ctx.exec(f"ln -sf {ctx.project_dir}/nvim {nvim_dir}")
+
     if ctx.system.platform == "linux":
 
         # install neovim
         snap_install(ctx, "nvim", classic=True)
-
-        nvim_dir = os.path.expanduser("~/.config/nvim")
-        if not os.path.exists(nvim_dir):
-            ctx.exec(f"ln -sf {ctx.project_dir}/nvim {nvim_dir}")
+        install_config_posix()
 
         return
     elif ctx.system.platform == "windows":
@@ -45,17 +47,23 @@ def _install_neovim(ctx: TaskContext):
         #                         )
         # ctx.log.info("installing neovim")
         # install_msi(ctx, fname)
+    elif ctx.system.platform == "darwin":
+        if not os.path.exists("/opt/homebrew/bin/nvim"):
+            ctx.log.info("installing neovim")
+            ctx.exec("brew install nvim")
+        else:
+            ctx.log.info("neovim already installed")
+
+        install_config_posix()
+
+        return
 
     raise NotImplementedError(f"neovim not implemented on platform: {ctx.system.platform} distro:{ctx.system.distro}")
 
 
 def _install_alacritty(ctx: TaskContext):
 
-    if ctx.system.platform == "linux":
-
-        # install alacritty
-        snap_install(ctx, "alacritty", classic=True)
-
+    def install_config_posix():
         config_dir = os.path.expanduser("~/.config")
 
         # install config file
@@ -68,6 +76,13 @@ def _install_alacritty(ctx: TaskContext):
         else:
             ctx.log.info("alacritty config already installed")
 
+    if ctx.system.platform == "linux":
+
+        # install alacritty
+        snap_install(ctx, "alacritty", classic=True)
+
+        install_config_posix()
+
         # replace caps lock with ctrl
         xmod_file = os.path.expanduser("~/.Xmodmap")
         if not os.path.exists(xmod_file):
@@ -79,6 +94,15 @@ def _install_alacritty(ctx: TaskContext):
             ctx.log.info("xmodmap config already installed")
 
         return
+    elif ctx.system.platform == "darwin":
+        if not os.path.exists("/opt/homebrew/bin/alacritty"):
+            ctx.log.info("installing alacritty")
+            ctx.exec("brew install alacritty")
+        else:
+            ctx.log.info("alacritty already installed")
+
+        install_config_posix()
+        return
 
     # %APPDATA%\alacritty\alacritty.toml
 
@@ -86,8 +110,14 @@ def _install_alacritty(ctx: TaskContext):
 
 
 def _install_nerdfonts(ctx: TaskContext):
-    if ctx.system.platform == "linux":
-        if not os.path.exists(os.path.expanduser("~/.local/share/fonts/NerdFonts")):
+    if ctx.system.platform == "linux" or ctx.system.platform == "darwin":
+        
+        if ctx.system.platform == "linux":
+            dest = os.path.expanduser("~/.local/share/fonts/NerdFonts")
+        if ctx.system.platform == "darwin":
+            dest = os.path.expanduser("~/Library/Fonts/NerdFonts")
+
+        if not os.path.exists(dest):
             ctx.log.info("installing nerd fonts")
             if not os.path.exists("/tmp/nerd-fonts"):
                 ctx.exec("git clone --depth=1 https://github.com/ryanoasis/nerd-fonts.git /tmp/nerd-fonts")
@@ -102,10 +132,13 @@ def _install_nerdfonts(ctx: TaskContext):
 
 def _install_tmux(ctx: TaskContext):
 
-    if ctx.system.platform == "linux":
+    if ctx.system.platform == "linux" or ctx.system.platform == "darwin":
 
         # install tmux
-        apt_install(ctx, "tmux", "/usr/bin/tmux")
+        if ctx.system.platform == "linux":
+            apt_install(ctx, "tmux", "/usr/bin/tmux")
+        elif ctx.system.platform == "darwin":
+            brew_install(ctx, "tmux")
 
         # link tmux config
         ctx.log.info("installing tmux config")
@@ -181,12 +214,14 @@ def _install_xmodmap(ctx: TaskContext):
 
         return
 
-    raise NotImplementedError(f"xmodmap not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+    #raise NotImplementedError(f"xmodmap not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 
 def _install_ripgrep(ctx: TaskContext):
     if ctx.system.platform == "linux":
         deb_install_github(ctx, "ripgrep", "/usr/bin/rg", "BurntSushi", "ripgrep", "amd64.deb")
+    elif ctx.system.platform == "darwin":
+        brew_install(ctx, "ripgrep", "/opt/homebrew/bin/rg")
     else:
         raise NotImplementedError(f"ripgrep not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
@@ -197,7 +232,7 @@ def _install_python(ctx: TaskContext):
         raise NotImplementedError(f"ripgrep not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
 
 def _install_all(ctx: TaskContext):
-    _install_python(ctx)
+    #_install_python(ctx)
     _install_neovim(ctx)
 
     _install_alacritty(ctx)
@@ -209,6 +244,6 @@ def _install_all(ctx: TaskContext):
 
 def configure(builder: TaskBuilder):
     module_name = "vi"
-    builder.add_task(module_name, f"{module_name}:all", _install_all, deps=["os:snap", "os:shell", "dev:build-essential"])
+    builder.add_task(module_name, f"{module_name}:all", _install_all) #, deps=["os:snap", "os:shell", "dev:build-essential"])
     builder.add_task(module_name, f"{module_name}:clean", _clean)
     builder.add_task(module_name, f"{module_name}:ripgrep", _install_ripgrep)
