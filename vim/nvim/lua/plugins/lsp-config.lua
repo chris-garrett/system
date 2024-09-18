@@ -32,7 +32,7 @@ return {
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       local lspconfig = require("lspconfig")
-      lspconfig.tsserver.setup({
+      lspconfig.ts_ls.setup({
         root_dir = lspconfig.util.root_pattern("package.json"),
         capabilities = capabilities,
       })
