@@ -184,7 +184,7 @@ def _install_tmux(ctx: TaskContext):
             with open(shell_exports, "w") as w:
                 w.write("\n")
                 w.write("# tmuxifier\n")
-                w.write('export PATH="~/.tmuxifier/bin:$PATH"\n')
+                w.write('export PATH=~/.tmuxifier/bin:$PATH\n')
                 w.write('eval "$(tmuxifier init -)"\n')
         else:
             ctx.log.info("tmuxifier shell integration already installed")
