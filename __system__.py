@@ -78,7 +78,8 @@ def snap_install(ctx: TaskContext, app: str, classic=False, edge=False):
             ctx.log.info(f"{app} already installed")
     else:
         raise NotImplementedError(
-            f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+            f"{app} not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def apt_install(ctx: TaskContext, app: str, file_test: str):
@@ -120,7 +121,11 @@ def brew_install(ctx: TaskContext, app: str, file_test: str = None):
     """
 
     if "darwin" in ctx.system.platform:
-        file_test = file_test if file_test and file_test.startswith("/") else f"/opt/homebrew/bin/{app}"
+        file_test = (
+            file_test
+            if file_test and file_test.startswith("/")
+            else f"/opt/homebrew/bin/{app}"
+        )
         if not os.path.exists(file_test):
             ctx.log.info(f"installing {app}")
             ctx.exec(f"brew install {app}")
@@ -219,7 +224,9 @@ def get_github_download_url(ctx: TaskContext, org: str, repo: str, regex: str):
     return ""
 
 
-def deb_install_github(ctx: TaskContext, app: str, file_test: str, org: str, repo: str, regex: str):
+def deb_install_github(
+    ctx: TaskContext, app: str, file_test: str, org: str, repo: str, regex: str
+):
     """
     Install a Debian package directly from a GitHub repository's latest release.
 
@@ -281,7 +288,9 @@ def usr_binary_install(ctx: TaskContext, app: str, app_url: str):
         )
 
 
-def usr_binary_install_github(ctx: TaskContext, app: str, org: str, repo: str, regex: str):
+def usr_binary_install_github(
+    ctx: TaskContext, app: str, org: str, repo: str, regex: str
+):
     """
     Install a binary application directly from a GitHub repository's latest release.
 

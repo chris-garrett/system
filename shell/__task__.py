@@ -45,7 +45,9 @@ fi
             os.makedirs(shelld, exist_ok=True)
 
     else:
-        raise NotImplementedError(f".bashrc not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f".bashrc not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _configure_shell_aliases(ctx: TaskContext):
@@ -82,7 +84,9 @@ def _configure_shell_aliases(ctx: TaskContext):
                 f.write(f"{value}\n")
 
     else:
-        raise NotImplementedError(f"shell_aliases implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"shell_aliases implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _configure_bin(ctx: TaskContext):
@@ -98,10 +102,14 @@ def _configure_bin(ctx: TaskContext):
             shell_file = os.path.expanduser("~/.shell.d/brew")
             os.makedirs(shell_dir, exist_ok=True)
             with open(shell_file, "w") as f:
-                f.write("export PATH=/opt/homebrew/bin:/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH\n")
+                f.write(
+                    "export PATH=/opt/homebrew/bin:/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH\n"
+                )
 
     else:
-        raise NotImplementedError( f"shell bin not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"shell bin not implemented on platform: { ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _configure_ssh(ctx: TaskContext):
@@ -118,7 +126,9 @@ def _configure_ssh(ctx: TaskContext):
                 )
             )
     else:
-        raise NotImplementedError( f"shell bin not implemented on platform: { ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"shell bin not implemented on platform: { ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _setup(ctx: TaskContext):

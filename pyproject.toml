@@ -1,24 +1,9 @@
-
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "system"
-version = "0.0.0"
-
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "black",
-    "flake8",
-    "pyproject-flake8",
-    "ruff",
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ruff>=0.8.6",
 ]
-
-[tool.black]
-line-length = 120
-target-version = ["py38"]
-
-[tool.flake8]
-max-line-length = 120

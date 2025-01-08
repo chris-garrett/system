@@ -27,5 +27,4 @@ def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:all", _install_all)
     builder.add_task(module_name, f"{module_name}:slack", _install_slack)
     builder.add_task(module_name, f"{module_name}:discord", _install_discord)
-    builder.add_task(
-        module_name, f"{module_name}:mattermost", _install_mattermost)
+    builder.add_task(module_name, f"{module_name}:mattermost", _install_mattermost)

@@ -26,32 +26,35 @@ def _disk_free(ctx: TaskContext):
 
 def configure(builder: TaskBuilder):
     module_name = "root"
-    builder.add_task(module_name, "guest:all",
-                     lambda ctx: True, deps=[
-                        "os:upgrade",
-                        "os:shell",
-                        # util things
-                        "util:curl",
-                        "util:xz",
-                        "util:bottom",
-                        "util:flameshot",
-                        "util:watchexec",
-                        # vim things
-                        "vi:all",
-                        # dev things
-                        "dev:git:config",
-                        "dev:git:lfs"
-                        "dev:build-essential",
-                        "dev:dotnet:8",
-                        "dev:gitkraken",
-                        "dev:meld",
-                        "dev:node",
-                        "dev:dbeaver",
-                        "dev:lazygit",
-                        "dev:toolbox",
-                        "vscode:all"
-                        # browsers
-                        "browsers:all",
-                        # comms tools
-                        "comms:all",
-                     ])
+    builder.add_task(
+        module_name,
+        "guest:all",
+        lambda ctx: True,
+        deps=[
+            "os:upgrade",
+            "os:shell",
+            # util things
+            "util:curl",
+            "util:xz",
+            "util:bottom",
+            "util:flameshot",
+            "util:watchexec",
+            # vim things
+            "vi:all",
+            # dev things
+            "dev:git:config",
+            "dev:git:lfs" "dev:build-essential",
+            "dev:dotnet:8",
+            "dev:gitkraken",
+            "dev:meld",
+            "dev:node",
+            "dev:dbeaver",
+            "dev:lazygit",
+            "dev:toolbox",
+            "vscode:all"
+            # browsers
+            "browsers:all",
+            # comms tools
+            "comms:all",
+        ],
+    )

@@ -31,7 +31,9 @@ def _guest(ctx: TaskContext):
 
 def _vm_create(ctx: TaskContext, name: str):
     if ctx.system.platform == "linux":
-        iso_path = os.path.expanduser("~/Downloads/OS/lubuntu-22.04.3-desktop-amd64.iso")
+        iso_path = os.path.expanduser(
+            "~/Downloads/OS/lubuntu-22.04.3-desktop-amd64.iso"
+        )
         vm_name = name.lower()
         vm_dir = os.path.expanduser(f"~/vms/{name}")
 
@@ -83,6 +85,12 @@ def configure(builder: TaskBuilder):
     builder.add_task(module_name, f"{module_name}:install", _install)
     builder.add_task(module_name, f"{module_name}:guest", _guest)
     builder.add_task(module_name, f"{module_name}:bridge", _vm_setup_bridge)
-    builder.add_task(module_name, f"{module_name}:ce:create", lambda ctx: _vm_create(ctx, "ce"))
-    builder.add_task(module_name, f"{module_name}:ce:up", lambda ctx: _vm_start(ctx, "ce"))
-    builder.add_task(module_name, f"{module_name}:ce:down", lambda ctx: _vm_stop(ctx, "ce"))
+    builder.add_task(
+        module_name, f"{module_name}:ce:create", lambda ctx: _vm_create(ctx, "ce")
+    )
+    builder.add_task(
+        module_name, f"{module_name}:ce:up", lambda ctx: _vm_start(ctx, "ce")
+    )
+    builder.add_task(
+        module_name, f"{module_name}:ce:down", lambda ctx: _vm_stop(ctx, "ce")
+    )

@@ -24,12 +24,25 @@ def configure(builder: TaskBuilder):
         module_name,
         "games:steam",
         lambda ctx: deb_install(
-            ctx, "steam", "/usr/bin/steam", "https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb"
+            ctx,
+            "steam",
+            "/usr/bin/steam",
+            "https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb",
         ),
     )
-    builder.add_task(module_name, "games:lutris", lambda ctx: apt_install(ctx, "lutris", "/usr/games/lutris"))
     builder.add_task(
-        module_name, "games:winetricks", lambda ctx: apt_install(ctx, "winetricks", "/usr/games/winetricks")
+        module_name,
+        "games:lutris",
+        lambda ctx: apt_install(ctx, "lutris", "/usr/games/lutris"),
     )
-    builder.add_task(module_name, "games:lutris", lambda ctx: apt_install(ctx, "lutris", "/usr/games/lutris"))
+    builder.add_task(
+        module_name,
+        "games:winetricks",
+        lambda ctx: apt_install(ctx, "winetricks", "/usr/games/winetricks"),
+    )
+    builder.add_task(
+        module_name,
+        "games:lutris",
+        lambda ctx: apt_install(ctx, "lutris", "/usr/games/lutris"),
+    )
     builder.add_task(module_name, "games:protontricks", _protontricks)

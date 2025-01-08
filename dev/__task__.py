@@ -2,9 +2,9 @@ import os
 import shutil
 from textwrap import dedent
 
-from __system__ import (apt_install, brew_install, download_to_tmp, brew_install,
-                        get_shelld_dir, get_tmp_dir, snap_install)
+from __system__ import apt_install, brew_install, get_shelld_dir, snap_install
 from __tasklib__ import TaskBuilder, TaskContext
+import __system__ as system
 
 module_name = "dev"
 
@@ -26,15 +26,15 @@ def _dotnet_installer(ctx: TaskContext, version: str):
 
         if not os.path.exists(installer_file):
             ctx.exec(
-                f"curl -L -o {installer_file} https://dot.net/v1/dotnet-install.sh")
+                f"curl -L -o {installer_file} https://dot.net/v1/dotnet-install.sh"
+            )
 
         if os.path.exists(dotnet):
             ret = ctx.exec(f"{dotnet} --list-sdks", capture=True)
             if ret.returncode != 0:
                 raise Exception(f"Failed to list dotnet sdks: {ret.stderr}")
 
-            found = len([x for x in ret.stdout.splitlines()
-                        if x.startswith(version)])
+            found = len([x for x in ret.stdout.splitlines() if x.startswith(version)])
         else:
             found = False
 
@@ -57,15 +57,15 @@ def _dotnet_installer(ctx: TaskContext, version: str):
             ctx.log.info(f"dotnet {version} already installed")
     else:
         raise NotImplementedError(
-            f"dotnet {version} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"dotnet {version} not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
 def _toolbox(ctx: TaskContext):
     if "debian" in ctx.system.distro:
         toolbox = os.path.expanduser(
-            "~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox")
+            "~/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox"
+        )
         if not os.path.exists(toolbox):
             ctx.exec("sudo apt-get install -y fuse libfuse2")
             ctx.exec("mkdir -p /tmp/jtoolbox")
@@ -73,17 +73,14 @@ def _toolbox(ctx: TaskContext):
                 "curl -o /tmp/jtoolbox.tar.gz -L 'https://data.services.jetbrains.com/products/download?platform=linux&code=TBA'"
             )
             ctx.exec("tar xvf /tmp/jtoolbox.tar.gz -C /tmp/jtoolbox")
-            ret = ctx.exec(
-                "find /tmp/jtoolbox -name jetbrains-toolbox", capture=True)
+            ret = ctx.exec("find /tmp/jtoolbox -name jetbrains-toolbox", capture=True)
             if ret.returncode != 0:
-                raise Exception(
-                    f"Failed to find jetbrains toolbox: {ret.stderr}")
+                raise Exception(f"Failed to find jetbrains toolbox: {ret.stderr}")
 
             ctx.exec(ret.stdout.strip())
     else:
         raise NotImplementedError(
-            f"toolbox not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"toolbox not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
@@ -97,8 +94,7 @@ def _build_essential(ctx: TaskContext):
             ctx.log.info(f"{tool} already installed")
     else:
         raise NotImplementedError(
-            f"{tool} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"{tool} not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
@@ -110,7 +106,8 @@ def _node(ctx: TaskContext):
     if ctx.system.platform in ("linux", "darwin"):
         if not os.path.exists(node_dir):
             ctx.exec(
-                "curl -o /tmp/nvm.sh -L -C - https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh")
+                "curl -o /tmp/nvm.sh -L -C - https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh"
+            )
             ctx.exec("bash /tmp/nvm.sh")
             # TODO: fix this
             # ctx.exec(f"zsh -l 'nvm install 20'")
@@ -130,8 +127,7 @@ def _node(ctx: TaskContext):
 
     else:
         raise NotImplementedError(
-            f"{tool} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"{tool} not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
@@ -144,7 +140,8 @@ def _lazygit(ctx: TaskContext):
             ctx.log.info(f"installing {tool}")
 
             release_url = system.get_github_download_url(
-                ctx, "jesseduffield", "lazygit", r"Linux_x86_64.tar.gz$")
+                ctx, "jesseduffield", "lazygit", r"Linux_x86_64.tar.gz$"
+            )
             ctx.exec(f"curl -o /tmp/lazygit.tar.gz -L -C - '{release_url}'")
             ctx.exec(f"tar xvf /tmp/lazygit.tar.gz -C {bin_dir} lazygit")
             ctx.exec(f"chmod +x {lazygit}")
@@ -155,8 +152,7 @@ def _lazygit(ctx: TaskContext):
         brew_install(ctx, "lazygit")
     else:
         raise NotImplementedError(
-            f"lazygit not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"lazygit not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
@@ -167,12 +163,13 @@ def _conda(ctx: TaskContext):
         if os.path.exists(bin_dir):
             ctx.log.info(f"installing {tool}")
 
-            release_url = "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+            release_url = (
+                "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+            )
             ctx.exec(f"curl -o /tmp/conda.sh -L -C - '{release_url}'")
             ctx.exec(f"bash /tmp/conda.sh -b -u -p {bin_dir}")
             ctx.exec(
-                f"{os.path.expanduser(
-                    '~/miniconda3/bin/conda create -n py312 python=3.12 -y')}"
+                f"{os.path.expanduser('~/miniconda3/bin/conda create -n py312 python=3.12 -y')}"
             )
             shutil.rmtree("/tmp/conda.sh", ignore_errors=True)
 
@@ -205,8 +202,7 @@ def _conda(ctx: TaskContext):
             ctx.log.info(f"{tool} already installed")
     else:
         raise NotImplementedError(
-            f"lazygit not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"lazygit not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
@@ -219,7 +215,8 @@ def _deno(ctx: TaskContext):
             ctx.log.info(f"installing {tool}")
 
             release_url = system.get_github_download_url(
-                ctx, "denoland", "deno", r"x86_64-unknown-linux-gnu.zip$")
+                ctx, "denoland", "deno", r"x86_64-unknown-linux-gnu.zip$"
+            )
             ctx.exec(f"curl -o /tmp/deno.zip -L -C - '{release_url}'")
             ctx.exec(f"unzip /tmp/deno.zip deno -d {bin_dir}")
             ctx.exec(f"chmod +x {deno}")
@@ -228,8 +225,7 @@ def _deno(ctx: TaskContext):
             ctx.log.info(f"{tool} already installed")
     else:
         raise NotImplementedError(
-            f"{tool} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"{tool} not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
@@ -241,14 +237,16 @@ def _git_lfs(ctx: TaskContext):
         brew_install(ctx, "git-lfs")
     else:
         raise NotImplementedError(
-            f"{tool} not implemented on platform: {
-                ctx.system.platform}:{ctx.system.distro}"
+            f"{tool} not implemented on platform: {ctx.system.platform}: {ctx.system.distro}"
         )
 
 
 def configure(builder: TaskBuilder):
-    builder.add_task(module_name, f"{module_name}:meld", lambda ctx: apt_install(
-        ctx, "meld", "/usr/bin/meld"))
+    builder.add_task(
+        module_name,
+        f"{module_name}:meld",
+        lambda ctx: apt_install(ctx, "meld", "/usr/bin/meld"),
+    )
     builder.add_task(
         module_name,
         f"{module_name}:postman",
@@ -261,8 +259,11 @@ def configure(builder: TaskBuilder):
     )
     builder.add_task(module_name, f"{module_name}:git:config", _git_config)
     builder.add_task(module_name, f"{module_name}:git:lfs", _git_lfs)
-    builder.add_task(module_name, f"{module_name}:gitkraken", lambda ctx: snap_install(
-        ctx, "gitkraken", classic=True))
+    builder.add_task(
+        module_name,
+        f"{module_name}:gitkraken",
+        lambda ctx: snap_install(ctx, "gitkraken", classic=True),
+    )
     builder.add_task(module_name, f"{module_name}:lazygit", _lazygit)
     builder.add_task(
         module_name,
@@ -275,18 +276,25 @@ def configure(builder: TaskBuilder):
         ],
     )
     builder.add_task(
-        module_name, f"{module_name}:dotnet:6", lambda ctx: _dotnet_installer(ctx, "6.0"), deps=["utils:curl"]
+        module_name,
+        f"{module_name}:dotnet:6",
+        lambda ctx: _dotnet_installer(ctx, "6.0"),
+        deps=["utils:curl"],
     )
     builder.add_task(
-        module_name, f"{module_name}:dotnet:7", lambda ctx: _dotnet_installer(ctx, "7.0"), deps=["utils:curl"]
+        module_name,
+        f"{module_name}:dotnet:7",
+        lambda ctx: _dotnet_installer(ctx, "7.0"),
+        deps=["utils:curl"],
     )
     builder.add_task(
-        module_name, f"{module_name}:dotnet:8", lambda ctx: _dotnet_installer(ctx, "8.0"), deps=["utils:curl"]
+        module_name,
+        f"{module_name}:dotnet:8",
+        lambda ctx: _dotnet_installer(ctx, "8.0"),
+        deps=["utils:curl"],
     )
     builder.add_task(module_name, f"{module_name}:toolbox", _toolbox)
-    builder.add_task(
-        module_name, f"{module_name}:build-essential", _build_essential)
-    builder.add_task(
-        module_name, f"{module_name}:node", _node, deps=["utils:xz"])
+    builder.add_task(module_name, f"{module_name}:build-essential", _build_essential)
+    builder.add_task(module_name, f"{module_name}:node", _node, deps=["utils:xz"])
     builder.add_task(module_name, f"{module_name}:conda", _conda)
     builder.add_task(module_name, f"{module_name}:deno", _deno)

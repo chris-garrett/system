@@ -1,8 +1,7 @@
 import os
 import shutil
 
-from __system__ import (apt_install, brew_install, deb_install_github,
-                        download_to_tmp, install_msi, snap_install)
+from __system__ import apt_install, brew_install, deb_install_github, snap_install
 from __tasklib__ import TaskBuilder, TaskContext
 
 
@@ -17,21 +16,18 @@ def _clean(ctx: TaskContext):
 
 
 def _install_neovim(ctx: TaskContext):
-
     def install_config_posix():
         nvim_dir = os.path.expanduser("~/.config/nvim")
         if not os.path.exists(nvim_dir):
             ctx.exec(f"ln -sf {ctx.project_dir}/nvim {nvim_dir}")
 
     if ctx.system.platform == "linux":
-
         # install neovim
         snap_install(ctx, "nvim", classic=True)
         install_config_posix()
 
         return
     elif ctx.system.platform == "windows":
-
         ret = ctx.exec("nvim --version")
         ctx.log.info(f">>> {ret}")
 
@@ -59,12 +55,12 @@ def _install_neovim(ctx: TaskContext):
 
         return
 
-    raise NotImplementedError(f"neovim not implemented on platform: {
-                              ctx.system.platform} distro:{ctx.system.distro}")
+    raise NotImplementedError(
+        f"neovim not implemented on platform: {ctx.system.platform} distro:{ctx.system.distro}"
+    )
 
 
 def _install_alacritty(ctx: TaskContext):
-
     def install_config_posix():
         config_dir = os.path.expanduser("~/.config")
 
@@ -75,12 +71,12 @@ def _install_alacritty(ctx: TaskContext):
             ctx.log.info("installing alacritty config")
             ctx.exec(f"mkdir -p {alacritty_dir}")
             ctx.exec(
-                f"cp {ctx.project_dir}/{alacritty_toml} {alacritty_dir}/{alacritty_toml}")
+                f"cp {ctx.project_dir}/{alacritty_toml} {alacritty_dir}/{alacritty_toml}"
+            )
         else:
             ctx.log.info("alacritty config already installed")
 
     if ctx.system.platform == "linux":
-
         # install alacritty
         snap_install(ctx, "alacritty", classic=True)
 
@@ -109,13 +105,13 @@ def _install_alacritty(ctx: TaskContext):
 
     # %APPDATA%\alacritty\alacritty.toml
 
-    raise NotImplementedError(f"alacritty not implemented on platform: {
-                              ctx.system.platform}:{ctx.system.distro}")
+    raise NotImplementedError(
+        f"alacritty not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+    )
 
 
 def _install_nerdfonts(ctx: TaskContext):
     if ctx.system.platform == "linux" or ctx.system.platform == "darwin":
-
         if ctx.system.platform == "linux":
             dest = os.path.expanduser("~/.local/share/fonts/NerdFonts")
         if ctx.system.platform == "darwin":
@@ -125,21 +121,21 @@ def _install_nerdfonts(ctx: TaskContext):
             ctx.log.info("installing nerd fonts")
             if not os.path.exists("/tmp/nerd-fonts"):
                 ctx.exec(
-                    "git clone --depth=1 https://github.com/ryanoasis/nerd-fonts.git /tmp/nerd-fonts")
+                    "git clone --depth=1 https://github.com/ryanoasis/nerd-fonts.git /tmp/nerd-fonts"
+                )
             ctx.exec("/bin/bash /tmp/nerd-fonts/install.sh UbuntuMono")
         else:
             ctx.log.info("nerd fonts already installed")
 
         return
 
-    raise NotImplementedError(f"nerdfonts not implemented on platform: {
-                              ctx.system.platform}:{ctx.system.distro}")
+    raise NotImplementedError(
+        f"nerdfonts not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+    )
 
 
 def _install_tmux(ctx: TaskContext):
-
     if ctx.system.platform in ("linux", "darwin"):
-
         # install tmux
         if ctx.system.platform == "linux":
             apt_install(ctx, "tmux", "/usr/bin/tmux")
@@ -158,7 +154,8 @@ def _install_tmux(ctx: TaskContext):
             ctx.log.info("installing tmux plugins")
             ctx.exec(f"mkdir -p {tmp_plugins_dir}")
             ctx.exec(
-                f"git clone https://github.com/tmux-plugins/tpm {tmp_plugins_dir}/tpm")
+                f"git clone https://github.com/tmux-plugins/tpm {tmp_plugins_dir}/tpm"
+            )
         else:
             ctx.log.info("tmux plugins already installed")
 
@@ -166,16 +163,14 @@ def _install_tmux(ctx: TaskContext):
         tmuxifier_dir = os.path.expanduser("~/.tmuxifier")
         if not os.path.exists(tmuxifier_dir):
             ctx.log.info("installing tmuxifier")
-            ctx.exec(
-                f"git clone git@github.com:jimeh/tmuxifier.git {tmuxifier_dir}")
+            ctx.exec(f"git clone git@github.com:jimeh/tmuxifier.git {tmuxifier_dir}")
         else:
             ctx.log.info("tmuxifier already installed")
 
         # link tmuxifier layouts
         tmuxifier_layouts_dir = f"{tmuxifier_dir}/layouts"
         shutil.rmtree(tmuxifier_layouts_dir, ignore_errors=True)
-        ctx.exec(
-            f"ln -sf {ctx.project_dir}/tmuxifier/layouts {tmuxifier_dir}")
+        ctx.exec(f"ln -sf {ctx.project_dir}/tmuxifier/layouts {tmuxifier_dir}")
 
         # install tmuxifier shell integration
         shell_exports = os.path.expanduser("~/.shell.d/tmux")
@@ -184,21 +179,20 @@ def _install_tmux(ctx: TaskContext):
             with open(shell_exports, "w") as w:
                 w.write("\n")
                 w.write("# tmuxifier\n")
-                w.write('export PATH=~/.tmuxifier/bin:$PATH\n')
+                w.write("export PATH=~/.tmuxifier/bin:$PATH\n")
                 w.write('eval "$(tmuxifier init -)"\n')
         else:
             ctx.log.info("tmuxifier shell integration already installed")
 
         return
 
-    raise NotImplementedError(f"tmux not implemented on platform: {
-                              ctx.system.platform}:{ctx.system.distro}")
+    raise NotImplementedError(
+        f"tmux not implemented on platform: {  ctx.system.platform}:{ctx.system.distro}"
+    )
 
 
 def _install_xmodmap(ctx: TaskContext):
-
     if ctx.system.platform == "linux":
-
         # replace caps lock with ctrl
         xmod_file = os.path.expanduser("~/.Xmodmap")
         if not os.path.exists(xmod_file):
@@ -229,21 +223,24 @@ def _install_xmodmap(ctx: TaskContext):
 
 def _install_ripgrep(ctx: TaskContext):
     if ctx.system.platform == "linux":
-        deb_install_github(ctx, "ripgrep", "/usr/bin/rg",
-                           "BurntSushi", "ripgrep", "amd64.deb")
+        deb_install_github(
+            ctx, "ripgrep", "/usr/bin/rg", "BurntSushi", "ripgrep", "amd64.deb"
+        )
     elif ctx.system.platform == "darwin":
         brew_install(ctx, "ripgrep", "/opt/homebrew/bin/rg")
     else:
-        raise NotImplementedError(f"ripgrep not implemented on platform: {
-                                  ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"ripgrep not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _install_python(ctx: TaskContext):
     if ctx.system.platform == "linux":
         apt_install(ctx, "python3-venv", "/usr/bin/python3-venv")
     else:
-        raise NotImplementedError(f"ripgrep not implemented on platform: {
-                                  ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"ripgrep not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def _install_all(ctx: TaskContext):

@@ -33,7 +33,8 @@ def _install_code(ctx: TaskContext):
         if not os.path.exists("/usr/bin/codium"):
             ctx.log.info(f"installing {tool}")
             deb_url = get_github_download_url(
-                ctx, "VSCodium", "vscodium", r"amd64.deb$")
+                ctx, "VSCodium", "vscodium", r"amd64.deb$"
+            )
             deb_install(ctx, "codium", "/usr/bin/codium", deb_url)
         else:
             ctx.log.info(f"{tool} already installed")
@@ -49,9 +50,11 @@ def _install_ms_code(ctx: TaskContext):
             ctx.log.info("installing")
             ctx.exec("sudo apt update")
             ctx.exec(
-                "sudo apt install software-properties-common apt-transport-https wget")
+                "sudo apt install software-properties-common apt-transport-https wget"
+            )
             ctx.exec(
-                "wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -")
+                "wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -"
+            )
             ctx.exec(
                 'sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"'
             )
@@ -59,7 +62,9 @@ def _install_ms_code(ctx: TaskContext):
         else:
             ctx.log.info("already installed")
     else:
-        raise NotImplementedError(f"Not implemented on platform: {ctx.system.platform}:{ctx.system.distro}")
+        raise NotImplementedError(
+            f"Not implemented on platform: {ctx.system.platform}:{ctx.system.distro}"
+        )
 
 
 def noop(ctx: TaskContext):
@@ -68,8 +73,18 @@ def noop(ctx: TaskContext):
 
 def configure(builder: TaskBuilder):
     module_name = "vscode"
-    builder.add_task(module_name, "vscode:all", noop, deps=[
-        "vscode:install", "vscode:python", "vscode:aiml", "vscode:dotnet", "vscode:containers"])
+    builder.add_task(
+        module_name,
+        "vscode:all",
+        noop,
+        deps=[
+            "vscode:install",
+            "vscode:python",
+            "vscode:aiml",
+            "vscode:dotnet",
+            "vscode:containers",
+        ],
+    )
     builder.add_task(module_name, "vscode:install", _install_code)
     builder.add_task(module_name, "vscode:python", _python)
     builder.add_task(module_name, "vscode:aiml", _aiml)

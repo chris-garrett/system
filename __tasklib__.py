@@ -53,23 +53,14 @@ import typing
 import importlib.machinery
 import inspect
 import logging
-import os
 import platform
 from logging import Logger
 import argparse
-import shlex
 import subprocess
-import sys
-import typing
 from dataclasses import dataclass, field
-from logging import Logger
 from subprocess import CompletedProcess
-from dataclasses import dataclass
 from typing import NamedTuple, Callable, List, Protocol, runtime_checkable
-import importlib.machinery
-import inspect
-from typing import (Any, Callable, Dict, List, NamedTuple, Protocol,
-                    runtime_checkable)
+from typing import Any, Dict
 
 
 def load_dotenv(filename=".env", override=False, expand_vars=True):
@@ -141,7 +132,12 @@ class SystemContext(NamedTuple):
 
 
 def exec(
-    cmd: str, cwd: str = None, logger: Logger = None, venv_dir: str = None, capture: bool = False, input: str = None
+    cmd: str,
+    cwd: str = None,
+    logger: Logger = None,
+    venv_dir: str = None,
+    capture: bool = False,
+    input: str = None,
 ) -> CompletedProcess[str]:
     args = [arg.strip() for arg in shlex.split(cmd.strip())]
     if isinstance(logger, Logger) and not capture:
@@ -175,7 +171,12 @@ class TaskContext(ExecProtocol):
     args: Dict[str, Any] = field(default_factory=dict)
 
     def exec(
-        self, cmd: str, cwd: str = None, venv_dir: str = None, capture: bool = False, input: str = None
+        self,
+        cmd: str,
+        cwd: str = None,
+        venv_dir: str = None,
+        capture: bool = False,
+        input: str = None,
     ) -> CompletedProcess[str]:
         return exec(cmd, cwd, self.log, venv_dir, capture, input)
 
@@ -203,7 +204,9 @@ class TaskBuilder(object):
     def use_python(self, python_exe):
         self.python_exe = python_exe
 
-    def add_task(self, module: str, name: str, func: callable, deps: List[str] = []) -> None:
+    def add_task(
+        self, module: str, name: str, func: callable, deps: List[str] = []
+    ) -> None:
         """
         Add a task to the list of parsers.
 
@@ -228,7 +231,7 @@ def _build_env(env, venv_dir):
     if "VIRTUAL_ENV" in old_env:
         old_venv = f"{old_env['VIRTUAL_ENV']}/bin:"
         # remove the old virtualenv path
-        old_path = old_env["PATH"][len(old_venv):]  # noqa
+        old_path = old_env["PATH"][len(old_venv) :]  # noqa
     else:
         old_path = old_env["PATH"]
 
@@ -262,7 +265,12 @@ def _load_tasks(task: TaskFileDefinition) -> typing.Dict[str, TaskDefinition]:
     task.func(builder)
     for module, name, func, deps in builder.parsers:
         tasks[name] = TaskDefinition(
-            module=module, name=name, func=func, dir=task.dir, filename=task.filename, deps=deps
+            module=module,
+            name=name,
+            func=func,
+            dir=task.dir,
+            filename=task.filename,
+            deps=deps,
         )
     return tasks
 
@@ -278,14 +286,16 @@ def _load_task_definitions(task_files) -> List[TaskFileDefinition]:
         module = loader.load_module()
         if not hasattr(module, "configure"):
             logger.trace(
-                f"load task definition: {task_file}: no configure() found, skipping {task_file}")
+                f"load task definition: {task_file}: no configure() found, skipping {task_file}"
+            )
             continue
 
         func = getattr(module, "configure")
         parameters = inspect.signature(func).parameters
         if "builder" not in parameters:
             logger.trace(
-                f"load task definition: {task_file}: no configure(builder) found, skipping {task_file}")
+                f"load task definition: {task_file}: no configure(builder) found, skipping {task_file}"
+            )
             continue
 
         logger.trace(f"load task definition: {task_file}: loaded successfully")
@@ -354,8 +364,12 @@ def _build_task_context(task: TaskDefinition) -> TaskContext:
 def _print_help(available_tasks: List[str]):
     # do a lazy sort to put tasks with no colons first
     formatted_tasks = "".join(
-        [f"  {t}\n" for t in sorted(available_tasks, key=lambda x: (
-            0 if x.count(":") == 0 else 1, x))]
+        [
+            f"  {t}\n"
+            for t in sorted(
+                available_tasks, key=lambda x: (0 if x.count(":") == 0 else 1, x)
+            )
+        ]
     )
     print(
         f"""usage: task [-h] [task ...]
@@ -372,11 +386,12 @@ options:
 
 def _resolve_deps(tasks_to_resolve, tasks):
     # Convert list of tasks to a dictionary for easy access
-    task_dict = {list(task.keys())[0]: list(
-        task.values())[0] for task in tasks}
+    task_dict = {list(task.keys())[0]: list(task.values())[0] for task in tasks}
 
     resolved = []  # List to store the resolved order of tasks
-    visited = set()  # Set to keep track of visited tasks to detect circular dependencies
+    visited = (
+        set()
+    )  # Set to keep track of visited tasks to detect circular dependencies
 
     def dfs(task):
         if task in resolved:  # If already resolved, no need to proceed
@@ -412,7 +427,7 @@ def _parse_task_args(task_args: str) -> Dict[str, Any]:
     A dictionary of argument names and values.
     """
     args = {}
-    args_str = task_args[task_args.find("[") + 1: task_args.rfind("]")]
+    args_str = task_args[task_args.find("[") + 1 : task_args.rfind("]")]
     for arg in args_str.split(","):
         if len(arg) > 0:
             key, value = arg.split("=")
@@ -462,7 +477,6 @@ def _process_tasks():
         _print_help(tasks.keys())
         return
 
-
     # validate tasks
     for task_name in task_names:
         if task_name not in tasks:
@@ -504,8 +518,9 @@ if __name__ == "__main__":
     ]
 
     for env in env_files:
-        load_dotenv(os.path.abspath(os.path.join(
-            os.path.dirname(__file__), env["file"])), env["override"])
+        load_dotenv(
+            os.path.abspath(os.path.join(os.path.dirname(__file__), env["file"])),
+            env["override"],
+        )
 
     _process_tasks()
-

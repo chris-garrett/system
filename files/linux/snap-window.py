@@ -39,7 +39,11 @@ logger = logging.getLogger("snap-window")
 
 
 def exec(
-    cmd: str, cwd: str = None, logger: Logger = None, venv_dir: str = None, capture: bool = False
+    cmd: str,
+    cwd: str = None,
+    logger: Logger = None,
+    venv_dir: str = None,
+    capture: bool = False,
 ) -> CompletedProcess[str]:
     args = [arg.strip() for arg in shlex.split(cmd.strip())]
     if isinstance(logger, Logger) and not capture:
@@ -109,34 +113,56 @@ def main():
         window_side = "right" if "right" in sys.argv else "left"
         logger.info("")
         logger.info(f"New request to move window {window_side}")
-        active_window = int(exec("xdotool getactivewindow", capture=True).stdout.strip())
+        active_window = int(
+            exec("xdotool getactivewindow", capture=True).stdout.strip()
+        )
         # for debugging:
         # active_window = 39845894
         logger.info("Active window: %s", active_window)
 
-        window = get_window_geometry(exec(f"xdotool getwindowgeometry {active_window}", capture=True).stdout.strip())
+        window = get_window_geometry(
+            exec(
+                f"xdotool getwindowgeometry {active_window}", capture=True
+            ).stdout.strip()
+        )
         logger.info("Window: %s", window)
 
         borders = get_border_geometry(
-            exec(f"xprop -id {active_window} _NET_FRAME_EXTENTS", capture=True).stdout.strip()
+            exec(
+                f"xprop -id {active_window} _NET_FRAME_EXTENTS", capture=True
+            ).stdout.strip()
         )
         logger.info(f"Borders: {borders}")
 
         xrandr = exec("xrandr", capture=True).stdout.strip().split("\n")
         monitors = [get_monitor_geometry(x) for x in xrandr if " connected" in x]
         for monitor in monitors:
-            if window["x"] >= monitor["x"] and window["x"] < monitor["x"] + monitor["width"]:
-                new_width = int(monitor["width"] / 2) - (borders["left"] + borders["right"])
+            if (
+                window["x"] >= monitor["x"]
+                and window["x"] < monitor["x"] + monitor["width"]
+            ):
+                new_width = int(monitor["width"] / 2) - (
+                    borders["left"] + borders["right"]
+                )
                 new_height = monitor["height"] - (borders["top"] + borders["bottom"])
                 new_x = monitor["x"]
                 new_y = monitor["y"]
 
                 if "right" in window_side:
-                    new_x = monitor["x"] + new_width + borders["left"] + borders["right"]
+                    new_x = (
+                        monitor["x"] + new_width + borders["left"] + borders["right"]
+                    )
 
-                logger.info("Moving and resizing to: %s", f"{new_width}x{new_height}+{new_x}+{new_y}")
-                exec(f"wmctrl -i -r {active_window} -b remove,maximized_vert,maximized_horz")
-                exec(f"wmctrl -i -r {active_window} -e 0,{new_x},{new_y},{new_width},{new_height}")
+                logger.info(
+                    "Moving and resizing to: %s",
+                    f"{new_width}x{new_height}+{new_x}+{new_y}",
+                )
+                exec(
+                    f"wmctrl -i -r {active_window} -b remove,maximized_vert,maximized_horz"
+                )
+                exec(
+                    f"wmctrl -i -r {active_window} -e 0,{new_x},{new_y},{new_width},{new_height}"
+                )
                 break
     except Exception as ex:
         logger.exception(ex)

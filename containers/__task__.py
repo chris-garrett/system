@@ -1,8 +1,7 @@
 import os
 import re
 
-from __system__ import (get_github_release, usr_binary_install,
-                        usr_binary_install_github)
+from __system__ import get_github_release, usr_binary_install, usr_binary_install_github
 from __tasklib__ import TaskBuilder, TaskContext
 
 module_name = "containers"
@@ -12,11 +11,18 @@ def _setup_docker(ctx: TaskContext):
     if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/local/bin/docker"):
             ctx.exec("sudo apt update")
-            ctx.exec("sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release")
+            ctx.exec(
+                "sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release"
+            )
             ctx.exec("sudo install -m 0755 -d /etc/apt/keyrings")
 
-            gpg = ctx.exec("curl -fsSL https://download.docker.com/linux/ubuntu/gpg", capture=True).stdout
-            ctx.exec("sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg", input=gpg)
+            gpg = ctx.exec(
+                "curl -fsSL https://download.docker.com/linux/ubuntu/gpg", capture=True
+            ).stdout
+            ctx.exec(
+                "sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg",
+                input=gpg,
+            )
 
             arch = ctx.exec("dpkg --print-architecture", capture=True).stdout.strip()
             lsb = ctx.exec("lsb_release -cs", capture=True).stdout.strip()
@@ -56,8 +62,14 @@ def _nvidia(ctd: TaskContext):
 def _kubectl(ctx: TaskContext):
     if "debian" in ctx.system.distro:
         if not os.path.exists("/usr/local/bin/kubectl"):
-            version = ctx.exec("curl -L -s https://dl.k8s.io/release/stable.txt", capture=True).stdout
-            usr_binary_install(ctx, "kubectl", f"https://dl.k8s.io/release/{version}/bin/linux/amd64/kubectl")
+            version = ctx.exec(
+                "curl -L -s https://dl.k8s.io/release/stable.txt", capture=True
+            ).stdout
+            usr_binary_install(
+                ctx,
+                "kubectl",
+                f"https://dl.k8s.io/release/{version}/bin/linux/amd64/kubectl",
+            )
         else:
             ctx.log.info("kubectl already installed")
 
@@ -90,6 +102,8 @@ def configure(builder: TaskBuilder):
     builder.add_task(
         module_name,
         f"{module_name}:k0s",
-        lambda ctx: usr_binary_install_github(ctx, "k0s", "k0sproject", "k0s", r"k0s-v.*amd64"),
+        lambda ctx: usr_binary_install_github(
+            ctx, "k0s", "k0sproject", "k0s", r"k0s-v.*amd64"
+        ),
     )
     builder.add_task(module_name, f"{module_name}:helm", _helm)
