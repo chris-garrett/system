@@ -5,6 +5,7 @@ from textwrap import dedent
 from __system__ import (apt_install, brew_install, download_to_tmp, brew_install,
                         get_shelld_dir, get_tmp_dir, snap_install)
 from __tasklib__ import TaskBuilder, TaskContext
+import __system__ as system
 
 module_name = "dev"
 
@@ -119,12 +120,11 @@ def _node(ctx: TaskContext):
 
         with open(os.path.expanduser("~/.shell.d/nvm"), "w") as f:
             f.write(
-                dedent(
-                    """
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-            """
+                dedent("""
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh"  # This loads nvm
+                [ -s "$NVM_DIR/bash_completion" ] && \\. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+                """
                 )
             )
 
@@ -138,7 +138,7 @@ def _node(ctx: TaskContext):
 def _lazygit(ctx: TaskContext):
     tool = "lazygit"
     if "debian" in ctx.system.distro:
-        bin_dir = os.path.expanduser("~/bin")
+        bin_dir = os.path.expanduser("~/opt/bin")
         lazygit = os.path.join(bin_dir, tool)
         if not os.path.exists(lazygit):
             ctx.log.info(f"installing {tool}")
